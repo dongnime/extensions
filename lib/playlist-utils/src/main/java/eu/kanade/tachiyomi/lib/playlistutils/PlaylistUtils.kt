@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION_ERROR")
+
 package eu.kanade.tachiyomi.lib.playlistutils
 
 import android.net.Uri
@@ -100,11 +102,12 @@ class PlaylistUtils(private val client: OkHttpClient, private val headers: Heade
         if (PLAYLIST_SEPARATOR !in masterPlaylist) {
             return listOf(
                 Video(
-                    videoUrl = playlistUrl,
-                    videoTitle = videoNameGen("Video"),
-                    headers = masterHeaders,
-                    subtitleTracks = subtitleList,
-                    audioTracks = audioList,
+                    playlistUrl,
+                    videoNameGen("Video"),
+                    playlistUrl,
+                    masterHeaders,
+                    subtitleList,
+                    audioList,
                 ),
             )
         }
@@ -189,11 +192,12 @@ class PlaylistUtils(private val client: OkHttpClient, private val headers: Heade
             } ?: return@mapNotNull null
 
             bandwidth to Video(
-                videoUrl = videoUrl,
-                videoTitle = videoNameGen(streamName),
-                headers = videoHeadersGen(headers, referer, videoUrl),
-                subtitleTracks = subtitleTracks,
-                audioTracks = audioTracks,
+                videoUrl,
+                videoNameGen(streamName),
+                videoUrl,
+                videoHeadersGen(headers, referer, videoUrl),
+                subtitleTracks,
+                audioTracks,
             )
         }
             .sortedByDescending { (bandwidth, _) ->
@@ -353,11 +357,12 @@ class PlaylistUtils(private val client: OkHttpClient, private val headers: Heade
                 .let { "$it (${videoSrc.attr("width")}x${videoSrc.attr("height")})" }
             val videoUrl = videoSrc.text()
             Video(
-                videoUrl = videoUrl,
-                videoTitle = videoNameGen(res, bandwidth),
-                audioTracks = audioTracks,
-                subtitleTracks = subtitleList,
-                headers = videoHeadersGen(headers, referer, videoUrl),
+                videoUrl,
+                videoNameGen(res, bandwidth),
+                videoUrl,
+                videoHeadersGen(headers, referer, videoUrl),
+                subtitleList,
+                audioTracks,
             )
         }
     }

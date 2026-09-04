@@ -5,7 +5,6 @@ import androidx.preference.PreferenceScreen
 import eu.kanade.tachiyomi.animesource.model.AnimeFilter
 import eu.kanade.tachiyomi.animesource.model.AnimeFilterList
 import eu.kanade.tachiyomi.animesource.model.AnimesPage
-import eu.kanade.tachiyomi.animesource.model.Hoster
 import eu.kanade.tachiyomi.animesource.model.SAnime
 import eu.kanade.tachiyomi.animesource.model.SEpisode
 import eu.kanade.tachiyomi.animesource.model.Video
@@ -71,10 +70,12 @@ class Anichin : Source() {
                     if (page > 1) addQueryParameter("paged", page.toString())
                 }.build().toString()
             }
+
             genreFilter != null && genreFilter.selected() != "" -> {
                 val base = "$baseUrl/genres/${genreFilter.selected()}/"
                 if (page == 1) base else "${base}page/$page/"
             }
+
             else -> {
                 val base = "$baseUrl/${(statusFilter?.selected() ?: "ongoing")}/"
                 if (page == 1) base else "${base}page/$page/"
@@ -91,27 +92,27 @@ class Anichin : Source() {
         GenreFilter(),
     )
 
-    private class StatusFilter : AnimeFilter.Select<String>(
-        "Status",
-        STATUSES.map { it.first }.toTypedArray(),
-    ) {
+    private class StatusFilter :
+        AnimeFilter.Select<String>(
+            "Status",
+            STATUSES.map { it.first }.toTypedArray(),
+        ) {
         fun selected() = STATUSES[state].second
     }
 
-    private class GenreFilter : AnimeFilter.Select<String>(
-        "Genre",
-        GENRES.map { it.first }.toTypedArray(),
-    ) {
+    private class GenreFilter :
+        AnimeFilter.Select<String>(
+            "Genre",
+            GENRES.map { it.first }.toTypedArray(),
+        ) {
         fun selected() = GENRES[state].second
     }
 
     // ============================== Shared list parsing ==============================
 
-    private fun hasNextPage(doc: Document): Boolean =
-        doc.selectFirst("a.next.page-numbers, div.hpage a.r") != null
+    private fun hasNextPage(doc: Document): Boolean = doc.selectFirst("a.next.page-numbers, div.hpage a.r") != null
 
-    private fun animeCards(doc: Document): List<Element> =
-        doc.select("article.bs")
+    private fun animeCards(doc: Document): List<Element> = doc.select("article.bs")
 
     /** Archive-style pages (`/ongoing/`, `/completed/`, `/genres/<slug>/`): cards link straight to `/seri/<slug>/`. */
     private fun parseArchiveListPage(doc: Document): AnimesPage {
@@ -209,32 +210,45 @@ class Anichin : Source() {
     private val dailymotionExtractor by lazy { DailymotionExtractor(client, headers) }
     private val cloudflareClient by lazy { client.newBuilder().addInterceptor(CloudflareInterceptor(client)).build() }
 
-    override suspend fun getHosterList(episode: SEpisode): List<Hoster> {
+    override suspend fun getVideoList(episode: SEpisode): List<Video> {
         val doc = client.newCall(GET("$baseUrl${episode.url}", headers)).execute().asJsoup()
 
-        return doc.select("select.mirror option[value]").mapNotNull { option ->
-            val label = option.text().trim()
-            val base64Value = option.attr("value").trim()
-            if (label.isBlank() || base64Value.isBlank()) return@mapNotNull null
+        val mirrorOptions = doc.select("select.mirror option[value]")
+        val videos = if (mirrorOptions.isNotEmpty()) {
+            mirrorOptions.flatMap { option ->
+                val label = option.text().trim()
+                val base64Value = option.attr("value").trim()
+                if (label.isBlank() || base64Value.isBlank()) return@flatMap emptyList()
 
-            val decodedHtml = runCatching { String(Base64.decode(base64Value, Base64.DEFAULT)) }
-                .getOrNull() ?: return@mapNotNull null
-            val iframeSrc = Jsoup.parse(decodedHtml).selectFirst("iframe")?.attr("src")
-                ?: return@mapNotNull null
+                val decodedHtml = runCatching { String(Base64.decode(base64Value, Base64.DEFAULT)) }
+                    .getOrNull() ?: return@flatMap emptyList()
+                val iframeSrc = Jsoup.parse(decodedHtml).selectFirst("iframe")?.attr("src")
+                    ?: return@flatMap emptyList()
 
-            Hoster(hosterName = label, hosterUrl = iframeSrc)
-        }
-    }
-
-    override suspend fun getVideoList(hoster: Hoster): List<Video> {
-        val embedUrl = hoster.hosterUrl
-        return runCatching {
-            when {
-                "ok.ru" in embedUrl -> okruExtractor.videosFromUrl(embedUrl, prefix = "${hoster.hosterName} - ")
-                "dailymotion.com" in embedUrl -> dailymotionExtractor.videosFromUrl(embedUrl, prefix = "${hoster.hosterName} - ")
-                else -> extractGenericEmbed(embedUrl, hoster.hosterName)
+                runCatching {
+                    when {
+                        "ok.ru" in iframeSrc -> okruExtractor.videosFromUrl(iframeSrc, prefix = "$label - ")
+                        "dailymotion.com" in iframeSrc -> dailymotionExtractor.videosFromUrl(iframeSrc, prefix = "$label - ")
+                        else -> extractGenericEmbed(iframeSrc, label)
+                    }
+                }.getOrElse { emptyList() }
             }
-        }.getOrElse { emptyList() }
+        } else {
+            val iframeSrc = doc.selectFirst(".player-embed iframe, .video-content iframe, iframe")?.attr("src")
+            if (!iframeSrc.isNullOrBlank()) {
+                runCatching {
+                    when {
+                        "ok.ru" in iframeSrc -> okruExtractor.videosFromUrl(iframeSrc, prefix = "Default - ")
+                        "dailymotion.com" in iframeSrc -> dailymotionExtractor.videosFromUrl(iframeSrc, prefix = "Default - ")
+                        else -> extractGenericEmbed(iframeSrc, "Default")
+                    }
+                }.getOrElse { emptyList() }
+            } else {
+                emptyList()
+            }
+        }
+
+        return videos.sortVideos()
     }
 
     /**
@@ -340,7 +354,7 @@ class Anichin : Source() {
             Pair("Urban Fantasy", "urban-fantasy"),
         )
 
-        private val DIRECT_M3U8_REGEX = Regex(""""(https?://[^"'\s]+\.m3u8[^"'\s]*)"""")
+        private val DIRECT_M3U8_REGEX = Regex("""["'](https?://[^"'\s]+\.m3u8[^"'\s]*)["']""")
         private val PACKED_JS_REGEX = Regex("""eval\(function\(p,a,c,k,e,d\).*?\}\)\)""", RegexOption.DOT_MATCHES_ALL)
 
         private const val PREF_QUALITY_KEY = "pref_quality"

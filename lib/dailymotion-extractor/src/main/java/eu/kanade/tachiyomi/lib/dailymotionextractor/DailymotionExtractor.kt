@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION_ERROR")
+
 package eu.kanade.tachiyomi.lib.dailymotionextractor
 
 import eu.kanade.tachiyomi.animesource.model.Track
@@ -169,11 +171,12 @@ class DailymotionExtractor(private val client: OkHttpClient, private val headers
             // Auto (Adaptive Master Stream) - Native HLS master playlist with audio
             videos.add(
                 Video(
-                    videoUrl = masterUrl,
-                    videoTitle = "${prefix}Auto (Adaptive)",
-                    headers = masterHeaders,
-                    subtitleTracks = subtitleList,
-                    audioTracks = audioTracks,
+                    masterUrl,
+                    "${prefix}Auto (Adaptive)",
+                    masterUrl,
+                    masterHeaders,
+                    subtitleList,
+                    audioTracks,
                 ),
             )
 
@@ -201,11 +204,12 @@ class DailymotionExtractor(private val client: OkHttpClient, private val headers
 
                     videos.add(
                         Video(
-                            videoUrl = nextUrl,
-                            videoTitle = "$prefix$qualityLabel",
-                            headers = headers,
-                            subtitleTracks = subtitleList,
-                            audioTracks = audioTracks,
+                            nextUrl,
+                            "$prefix$qualityLabel",
+                            nextUrl,
+                            headers,
+                            subtitleList,
+                            audioTracks,
                         ),
                     )
                 }

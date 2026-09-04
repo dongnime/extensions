@@ -63,7 +63,7 @@ abstract class Source :
     open fun videoListParse(response: Response): List<Video> = throw UnsupportedOperationException()
 
     override suspend fun getHosterList(episode: SEpisode): List<Hoster> {
-        return listOf(Hoster(hosterName = "Default", hosterUrl = episode.url))
+        return emptyList()
     }
 
     override suspend fun getVideoList(hoster: Hoster): List<Video> {

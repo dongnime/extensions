@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION_ERROR")
+
 package eu.kanade.tachiyomi.lib.okruextractor
 
 import eu.kanade.tachiyomi.animesource.model.Video
@@ -66,9 +68,12 @@ class OkruExtractor(private val client: OkHttpClient, private val headers: Heade
 
             if (videoUrl.startsWith("https://")) {
                 Video(
-                    videoUrl = videoUrl,
-                    videoTitle = videoQuality,
-                    headers = headers,
+                    videoUrl,
+                    videoQuality,
+                    videoUrl,
+                    headers,
+                    emptyList(),
+                    emptyList(),
                 )
             } else {
                 null
