@@ -17,6 +17,8 @@ import eu.kanade.tachiyomi.lib.unpacker.Unpacker
 import eu.kanade.tachiyomi.network.GET
 import extensions.utils.Source
 import extensions.utils.asJsoup
+import keiyoushi.utils.addBaseUrlPreference
+import keiyoushi.utils.addListPreference
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.Response
 import org.jsoup.Jsoup
@@ -29,7 +31,8 @@ class Anichin : Source() {
 
     override val name = "Anichin"
 
-    override val baseUrl = "https://anichin.cafe"
+    override val baseUrl: String
+        get() = preferences.getString(PREF_DOMAIN_KEY, PREF_DOMAIN_DEFAULT) ?: PREF_DOMAIN_DEFAULT
 
     override val lang = "id"
 
@@ -262,7 +265,24 @@ class Anichin : Source() {
         return sortedByDescending { it.videoTitle.contains(quality, ignoreCase = true) }
     }
 
+    // ============================== Settings ==============================
+
     override fun setupPreferenceScreen(screen: PreferenceScreen) {
+        screen.addBaseUrlPreference(
+            preferences = preferences,
+            defaultUrl = PREF_DOMAIN_DEFAULT,
+            title = "Base URL",
+            key = PREF_DOMAIN_KEY,
+        )
+
+        screen.addListPreference(
+            key = PREF_QUALITY_KEY,
+            default = PREF_QUALITY_DEFAULT,
+            title = "Preferred Quality",
+            summary = "%s",
+            entries = listOf("1080p", "720p", "480p", "360p"),
+            entryValues = listOf("1080p", "720p", "480p", "360p"),
+        )
     }
 
     companion object {
@@ -325,5 +345,7 @@ class Anichin : Source() {
 
         private const val PREF_QUALITY_KEY = "pref_quality"
         private const val PREF_QUALITY_DEFAULT = "1080p"
+        private const val PREF_DOMAIN_KEY = "pref_domain"
+        private const val PREF_DOMAIN_DEFAULT = "https://anichin.cafe"
     }
 }
