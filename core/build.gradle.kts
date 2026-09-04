@@ -1,0 +1,49 @@
+plugins {
+    id("com.android.library")
+    id("kotlinx-serialization")
+}
+
+android {
+    compileSdk = 34
+
+    defaultConfig {
+        minSdk = 21
+    }
+
+    namespace = "extensions.core"
+
+    sourceSets {
+        named("main") {
+            manifest.srcFile("AndroidManifest.xml")
+            res.srcDirs("src/main/res")
+        }
+    }
+
+    buildFeatures {
+        resValues = false
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_25
+        targetCompatibility = JavaVersion.VERSION_25
+    }
+
+    kotlin {
+        compilerOptions {
+            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_25)
+            freeCompilerArgs.add("-opt-in=kotlinx.serialization.ExperimentalSerializationApi")
+        }
+    }
+}
+
+dependencies {
+    compileOnly(versionCatalogs.named("libs").findBundle("common").get())
+    testImplementation(versionCatalogs.named("libs").findBundle("common").get())
+    testImplementation(versionCatalogs.named("libs").findLibrary("junit").get())
+    testImplementation(versionCatalogs.named("libs").findLibrary("injekt-core").get())
+    testImplementation(versionCatalogs.named("libs").findLibrary("kotlin-json").get())
+    testImplementation(versionCatalogs.named("libs").findLibrary("okhttp").get())
+    testImplementation(kotlin("test"))
+    testImplementation(versionCatalogs.named("libs").findBundle("common").get())
+    testImplementation(kotlin("test-junit"))
+}
