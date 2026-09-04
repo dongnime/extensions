@@ -2,10 +2,10 @@
   {
     "name": "Aniyomi: Anichin",
     "pkg": "eu.kanade.tachiyomi.animeextension.id.anichin",
-    "apk": "aniyomi-id.anichin-v16.1.apk",
+    "apk": "aniyomi-id.anichin-v15.1.apk",
     "lang": "id",
     "code": 1,
-    "version": "16.1",
+    "version": "15.1",
     "nsfw": 0,
     "sources": [
       {
