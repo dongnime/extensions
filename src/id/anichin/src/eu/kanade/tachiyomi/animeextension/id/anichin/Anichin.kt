@@ -1,16 +1,25 @@
 package eu.kanade.tachiyomi.animeextension.id.anichin
 
+import android.util.Base64
 import androidx.preference.PreferenceScreen
 import eu.kanade.tachiyomi.animesource.model.AnimeFilter
 import eu.kanade.tachiyomi.animesource.model.AnimeFilterList
 import eu.kanade.tachiyomi.animesource.model.AnimesPage
+import eu.kanade.tachiyomi.animesource.model.Hoster
 import eu.kanade.tachiyomi.animesource.model.SAnime
 import eu.kanade.tachiyomi.animesource.model.SEpisode
+import eu.kanade.tachiyomi.animesource.model.Video
+import eu.kanade.tachiyomi.lib.cloudflareinterceptor.CloudflareInterceptor
+import eu.kanade.tachiyomi.lib.dailymotionextractor.DailymotionExtractor
+import eu.kanade.tachiyomi.lib.okruextractor.OkruExtractor
+import eu.kanade.tachiyomi.lib.playlistutils.PlaylistUtils
+import eu.kanade.tachiyomi.lib.unpacker.Unpacker
 import eu.kanade.tachiyomi.network.GET
 import extensions.utils.Source
 import extensions.utils.asJsoup
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.Response
+import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 import java.text.SimpleDateFormat
@@ -190,6 +199,69 @@ class Anichin : Source() {
         return runCatching { DATE_FORMATTER.parse(dateStr)?.time ?: 0L }.getOrDefault(0L)
     }
 
+    // ============================== Hosters & Videos ==============================
+
+    private val playlistUtils by lazy { PlaylistUtils(client, headers) }
+    private val okruExtractor by lazy { OkruExtractor(client) }
+    private val dailymotionExtractor by lazy { DailymotionExtractor(client, headers) }
+    private val cloudflareClient by lazy { client.newBuilder().addInterceptor(CloudflareInterceptor(client)).build() }
+
+    override suspend fun getHosterList(episode: SEpisode): List<Hoster> {
+        val doc = client.newCall(GET("$baseUrl${episode.url}", headers)).execute().asJsoup()
+
+        return doc.select("select.mirror option[value]").mapNotNull { option ->
+            val label = option.text().trim()
+            val base64Value = option.attr("value").trim()
+            if (label.isBlank() || base64Value.isBlank()) return@mapNotNull null
+
+            val decodedHtml = runCatching { String(Base64.decode(base64Value, Base64.DEFAULT)) }
+                .getOrNull() ?: return@mapNotNull null
+            val iframeSrc = Jsoup.parse(decodedHtml).selectFirst("iframe")?.attr("src")
+                ?: return@mapNotNull null
+
+            Hoster(hosterName = label, hosterUrl = iframeSrc)
+        }
+    }
+
+    override suspend fun getVideoList(hoster: Hoster): List<Video> {
+        val embedUrl = hoster.hosterUrl
+        return runCatching {
+            when {
+                "ok.ru" in embedUrl -> okruExtractor.videosFromUrl(embedUrl, prefix = "${hoster.hosterName} - ")
+                "dailymotion.com" in embedUrl -> dailymotionExtractor.videosFromUrl(embedUrl, prefix = "${hoster.hosterName} - ")
+                else -> extractGenericEmbed(embedUrl, hoster.hosterName)
+            }
+        }.getOrElse { emptyList() }
+    }
+
+    /**
+     * Fallback for hosts with no dedicated extractor (anichin.stream's own JWPlayer,
+     * rumble.com, player.abyssplayer.com, morencius.com): fetch the embed page through
+     * a Cloudflare-challenge-solving client, then look for a direct .m3u8 URL, falling
+     * back to unpacking a classic packer-obfuscated `eval(function(p,a,c,k,e,d)...)`
+     * script if the direct search finds nothing.
+     */
+    private fun extractGenericEmbed(embedUrl: String, label: String): List<Video> {
+        val embedHeaders = headers.newBuilder().set("Referer", "$baseUrl/").build()
+        val html = cloudflareClient.newCall(GET(embedUrl, embedHeaders)).execute().body.string()
+
+        val directUrl = DIRECT_M3U8_REGEX.find(html)?.groupValues?.get(1)
+        if (directUrl != null) {
+            return playlistUtils.extractFromHls(directUrl, referer = embedUrl, videoNameGen = { q -> "$label - $q" })
+        }
+
+        val packedScript = PACKED_JS_REGEX.find(html)?.value ?: return emptyList()
+        val unpacked = runCatching { Unpacker.unpack(packedScript) }.getOrNull() ?: return emptyList()
+        val packedUrl = DIRECT_M3U8_REGEX.find(unpacked)?.groupValues?.get(1) ?: return emptyList()
+
+        return playlistUtils.extractFromHls(packedUrl, referer = embedUrl, videoNameGen = { q -> "$label - $q" })
+    }
+
+    override fun List<Video>.sortVideos(): List<Video> {
+        val quality = preferences.getString(PREF_QUALITY_KEY, PREF_QUALITY_DEFAULT) ?: PREF_QUALITY_DEFAULT
+        return sortedByDescending { it.videoTitle.contains(quality, ignoreCase = true) }
+    }
+
     override fun setupPreferenceScreen(screen: PreferenceScreen) {
     }
 
@@ -247,5 +319,11 @@ class Anichin : Source() {
             Pair("Thriller", "thriller"),
             Pair("Urban Fantasy", "urban-fantasy"),
         )
+
+        private val DIRECT_M3U8_REGEX = Regex(""""(https?://[^"'\s]+\.m3u8[^"'\s]*)"""")
+        private val PACKED_JS_REGEX = Regex("""eval\(function\(p,a,c,k,e,d\).*?\}\)\)""", RegexOption.DOT_MATCHES_ALL)
+
+        private const val PREF_QUALITY_KEY = "pref_quality"
+        private const val PREF_QUALITY_DEFAULT = "1080p"
     }
 }
