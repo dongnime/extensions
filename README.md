@@ -1,0 +1,21 @@
+# Dongnime Extensions
+
+Aniyomi/Anikku extension repo maintained by dongnime.
+
+## Install
+
+Add this URL as a repo in Aniyomi or Anikku (Extensions → the "+" icon → paste the URL):
+
+```
+https://raw.githubusercontent.com/dongnime/extensions/repo/index.min.json
+```
+
+## Extensions
+
+- **Anichin** (`id`) — [anichin.cafe](https://anichin.cafe), donghua streaming with Indonesian subtitles.
+
+## Disclaimer
+
+This repo does not host any content. Its extensions only provide an
+interface to publicly available websites. Intended for personal,
+educational use.
