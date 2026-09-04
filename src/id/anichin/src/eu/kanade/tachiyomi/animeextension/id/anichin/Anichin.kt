@@ -222,8 +222,9 @@ class Anichin : Source() {
 
                 val decodedHtml = runCatching { String(Base64.decode(base64Value, Base64.DEFAULT)) }
                     .getOrNull() ?: return@flatMap emptyList()
-                val iframeSrc = Jsoup.parse(decodedHtml).selectFirst("iframe")?.attr("src")
+                val rawSrc = Jsoup.parse(decodedHtml).selectFirst("iframe")?.attr("src")?.trim()
                     ?: return@flatMap emptyList()
+                val iframeSrc = resolveUrl(rawSrc, baseUrl)
 
                 runCatching {
                     when {
@@ -234,8 +235,9 @@ class Anichin : Source() {
                 }.getOrElse { emptyList() }
             }
         } else {
-            val iframeSrc = doc.selectFirst(".player-embed iframe, .video-content iframe, iframe")?.attr("src")
-            if (!iframeSrc.isNullOrBlank()) {
+            val rawSrc = doc.selectFirst(".player-embed iframe, .video-content iframe, iframe")?.attr("src")?.trim()
+            if (!rawSrc.isNullOrBlank()) {
+                val iframeSrc = resolveUrl(rawSrc, baseUrl)
                 runCatching {
                     when {
                         "ok.ru" in iframeSrc -> okruExtractor.videosFromUrl(iframeSrc, prefix = "Default - ")
@@ -253,25 +255,66 @@ class Anichin : Source() {
 
     /**
      * Fallback for hosts with no dedicated extractor (anichin.stream's own JWPlayer,
-     * rumble.com, player.abyssplayer.com, morencius.com): fetch the embed page through
-     * a Cloudflare-challenge-solving client, then look for a direct .m3u8 URL, falling
-     * back to unpacking a classic packer-obfuscated `eval(function(p,a,c,k,e,d)...)`
-     * script if the direct search finds nothing.
+     * rumble.com, player.abyssplayer.com, morencius.com): fetch the embed page, look
+     * for direct .m3u8 URLs or packed JS containing HLS streams, resolve relative paths,
+     * and extract video qualities.
      */
     private fun extractGenericEmbed(embedUrl: String, label: String): List<Video> {
         val embedHeaders = headers.newBuilder().set("Referer", "$baseUrl/").build()
-        val html = cloudflareClient.newCall(GET(embedUrl, embedHeaders)).execute().body.string()
+        val html = runCatching {
+            client.newCall(GET(embedUrl, embedHeaders)).execute().body.string()
+        }.getOrNull() ?: runCatching {
+            cloudflareClient.newCall(GET(embedUrl, embedHeaders)).execute().body.string()
+        }.getOrNull() ?: return emptyList()
 
-        val directUrl = DIRECT_M3U8_REGEX.find(html)?.groupValues?.get(1)
-        if (directUrl != null) {
-            return playlistUtils.extractFromHls(directUrl, referer = embedUrl, videoNameGen = { q -> "$label - $q" })
+        // 1. Direct M3U8 in HTML
+        for (match in M3U8_REGEX.findAll(html)) {
+            val raw = match.groupValues[1].ifEmpty { match.groupValues[2] }
+            if (raw.isNotBlank()) {
+                val resolved = resolveUrl(raw, embedUrl)
+                val videos = runCatching {
+                    playlistUtils.extractFromHls(resolved, referer = embedUrl, videoNameGen = { q -> "$label - $q" })
+                }.getOrElse { emptyList() }
+                if (videos.isNotEmpty()) return videos
+            }
         }
 
-        val packedScript = PACKED_JS_REGEX.find(html)?.value ?: return emptyList()
-        val unpacked = runCatching { Unpacker.unpack(packedScript) }.getOrNull() ?: return emptyList()
-        val packedUrl = DIRECT_M3U8_REGEX.find(unpacked)?.groupValues?.get(1) ?: return emptyList()
+        // 2. Packed JS scripts (e.g. anichin.stream JWPlayer setup)
+        for (match in PACKED_JS_REGEX.findAll(html)) {
+            val packedScript = match.value
+            val unpacked = runCatching { Unpacker.unpack(packedScript) }.getOrNull() ?: continue
+            for (m3u8Match in M3U8_REGEX.findAll(unpacked)) {
+                val raw = m3u8Match.groupValues[1].ifEmpty { m3u8Match.groupValues[2] }
+                if (raw.isNotBlank()) {
+                    val resolved = resolveUrl(raw, embedUrl)
+                    val videos = runCatching {
+                        playlistUtils.extractFromHls(resolved, referer = embedUrl, videoNameGen = { q -> "$label - $q" })
+                    }.getOrElse { emptyList() }
+                    if (videos.isNotEmpty()) return videos
+                }
+            }
+        }
 
-        return playlistUtils.extractFromHls(packedUrl, referer = embedUrl, videoNameGen = { q -> "$label - $q" })
+        return emptyList()
+    }
+
+    private fun resolveUrl(rawUrl: String, baseUrl: String): String {
+        val clean = rawUrl.trim()
+        return when {
+            clean.startsWith("http://") || clean.startsWith("https://") -> clean
+
+            clean.startsWith("//") -> "https:$clean"
+
+            clean.startsWith("/") -> {
+                val httpUrl = baseUrl.toHttpUrl()
+                "${httpUrl.scheme}://${httpUrl.host}$clean"
+            }
+
+            else -> {
+                val base = baseUrl.substringBefore("?")
+                "${base.substringBeforeLast('/')}/$clean"
+            }
+        }
     }
 
     override fun List<Video>.sortVideos(): List<Video> {
@@ -354,8 +397,14 @@ class Anichin : Source() {
             Pair("Urban Fantasy", "urban-fantasy"),
         )
 
-        private val DIRECT_M3U8_REGEX = Regex("""["'](https?://[^"'\s]+\.m3u8[^"'\s]*)["']""")
-        private val PACKED_JS_REGEX = Regex("""eval\(function\(p,a,c,k,e,d\).*?\}\)\)""", RegexOption.DOT_MATCHES_ALL)
+        private val M3U8_REGEX = Regex(
+            """(?:file|src)\s*:\s*["']([^"']+\.m3u8[^"']*)["']|["']([^"'\s]+\.m3u8[^"'\s]*)["']""",
+            RegexOption.IGNORE_CASE,
+        )
+        private val PACKED_JS_REGEX = Regex(
+            """eval\(function\(p,a,c,k,e,d\).*?\.split\('[|]'\),\d+,\{\}\)\)|eval\(function\(p,a,c,k,e,d\).*?\}\)\)""",
+            RegexOption.DOT_MATCHES_ALL,
+        )
 
         private const val PREF_QUALITY_KEY = "pref_quality"
         private const val PREF_QUALITY_DEFAULT = "1080p"

@@ -8,6 +8,7 @@ import eu.kanade.tachiyomi.network.GET
 import eu.kanade.tachiyomi.util.asJsoup
 import okhttp3.Headers
 import okhttp3.OkHttpClient
+import org.json.JSONObject
 
 class OkruExtractor(private val client: OkHttpClient, private val headers: Headers = Headers.EMPTY) {
     private val playlistUtils by lazy { PlaylistUtils(client) }
@@ -27,10 +28,61 @@ class OkruExtractor(private val client: OkHttpClient, private val headers: Heade
     }
 
     fun videosFromUrl(url: String, prefix: String = "", fixQualities: Boolean = true): List<Video> {
-        val document = client.newCall(GET(url, headers)).execute().asJsoup()
+        val document = runCatching {
+            client.newCall(GET(url, headers)).execute().asJsoup()
+        }.getOrNull() ?: return emptyList()
+
         val videoString = document.selectFirst("div[data-options]")
             ?.attr("data-options")
-            ?: return emptyList<Video>()
+            ?: return emptyList()
+
+        val videos = mutableListOf<Video>()
+
+        runCatching {
+            val json = JSONObject(videoString)
+            val flashvars = json.optJSONObject("flashvars") ?: json
+            val metadataStr = flashvars.optString("metadata")
+            val metadata = if (!metadataStr.isNullOrBlank()) {
+                runCatching { JSONObject(metadataStr) }.getOrNull()
+            } else {
+                flashvars.optJSONObject("metadata")
+            }
+
+            if (metadata != null) {
+                val hlsUrl = metadata.optString("hlsManifestUrl")
+                if (hlsUrl.isNotBlank() && hlsUrl.startsWith("http")) {
+                    runCatching {
+                        videos.addAll(playlistUtils.extractFromHls(hlsUrl, videoNameGen = { "Okru:$it".addPrefix(prefix) }))
+                    }
+                }
+
+                val videosArray = metadata.optJSONArray("videos")
+                if (videosArray != null && videosArray.length() > 0) {
+                    for (i in 0 until videosArray.length()) {
+                        val vObj = videosArray.optJSONObject(i) ?: continue
+                        val vUrl = vObj.optString("url")
+                        val vName = vObj.optString("name")
+                        if (vUrl.startsWith("https://")) {
+                            val quality = if (fixQualities) fixQuality(vName) else vName
+                            videos.add(
+                                Video(
+                                    vUrl,
+                                    "Okru:$quality".addPrefix(prefix),
+                                    vUrl,
+                                    headers,
+                                    emptyList(),
+                                    emptyList(),
+                                ),
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        if (videos.isNotEmpty()) {
+            return videos
+        }
 
         return when {
             "ondemandHls" in videoString -> {
