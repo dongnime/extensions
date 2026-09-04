@@ -5,6 +5,7 @@ import eu.kanade.tachiyomi.animesource.model.AnimeFilter
 import eu.kanade.tachiyomi.animesource.model.AnimeFilterList
 import eu.kanade.tachiyomi.animesource.model.AnimesPage
 import eu.kanade.tachiyomi.animesource.model.SAnime
+import eu.kanade.tachiyomi.animesource.model.SEpisode
 import eu.kanade.tachiyomi.network.GET
 import extensions.utils.Source
 import extensions.utils.asJsoup
@@ -12,6 +13,8 @@ import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.Response
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 class Anichin : Source() {
 
@@ -137,11 +140,62 @@ class Anichin : Source() {
         return "/seri/${match.groupValues[1]}/"
     }
 
+    // ============================== Details ==============================
+
+    override suspend fun getAnimeDetails(anime: SAnime): SAnime {
+        val doc = client.newCall(GET("$baseUrl${anime.url}", headers)).execute().asJsoup()
+
+        val statusText = doc.selectFirst("span:contains(Status)")?.text().orEmpty()
+        val synopsis = doc.selectFirst("div.bixbox.synp div.entry-content")?.text()?.trim()
+
+        return SAnime.create().apply {
+            title = doc.selectFirst("h1.entry-title")?.text()?.trim() ?: anime.title
+            thumbnail_url = doc.selectFirst("div.thumb img")?.attr("abs:src") ?: anime.thumbnail_url
+            genre = doc.select("div.genxed a").joinToString { it.text() }.ifBlank { null }
+            description = synopsis
+            status = when {
+                statusText.contains("Ongoing", ignoreCase = true) -> SAnime.ONGOING
+                statusText.contains("Completed", ignoreCase = true) -> SAnime.COMPLETED
+                else -> SAnime.UNKNOWN
+            }
+            initialized = true
+        }
+    }
+
+    // ============================== Episodes ==============================
+
+    override suspend fun getEpisodeList(anime: SAnime): List<SEpisode> {
+        val doc = client.newCall(GET("$baseUrl${anime.url}", headers)).execute().asJsoup()
+
+        return doc.select("div.eplister ul li").mapNotNull { li ->
+            val link = li.selectFirst("a[href]") ?: return@mapNotNull null
+            val epNumStr = li.selectFirst(".epl-num")?.text()?.trim().orEmpty()
+            val epNum = epNumStr.toFloatOrNull() ?: 0f
+            val epTitle = li.selectFirst(".epl-title")?.text()?.trim().orEmpty()
+            val subBadge = li.selectFirst(".epl-sub .status")?.text()?.trim()
+            val dateStr = li.selectFirst(".epl-date")?.text()?.trim()
+
+            SEpisode.create().apply {
+                setUrlWithoutDomain(link.attr("href"))
+                name = epTitle.ifBlank { "Episode $epNumStr" }
+                episode_number = epNum
+                date_upload = parseDate(dateStr)
+                scanlator = subBadge
+            }
+        }.sortedByDescending { it.episode_number }
+    }
+
+    private fun parseDate(dateStr: String?): Long {
+        if (dateStr.isNullOrBlank()) return 0L
+        return runCatching { DATE_FORMATTER.parse(dateStr)?.time ?: 0L }.getOrDefault(0L)
+    }
+
     override fun setupPreferenceScreen(screen: PreferenceScreen) {
     }
 
     companion object {
         private val EPISODE_SLUG_REGEX = Regex("""^(.+)-episode-\d+(?:-tamat)?-subtitle-indonesia$""")
+        private val DATE_FORMATTER = SimpleDateFormat("MMMM d, yyyy", Locale.ENGLISH)
 
         private val STATUSES = listOf(
             Pair("Ongoing", "ongoing"),
