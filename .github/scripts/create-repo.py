@@ -126,3 +126,18 @@ if REPO_APK_DIR.is_dir():
 
 with REPO_DIR.joinpath("index.min.json").open("w", encoding="utf-8") as index_file:
     json.dump(index_min_data, index_file, ensure_ascii=False, separators=(",", ":"))
+
+with REPO_DIR.joinpath("index.json").open("w", encoding="utf-8") as index_file:
+    json.dump(index_min_data, index_file, ensure_ascii=False, indent=2)
+
+repo_meta = {
+    "meta": {
+        "name": "Dongnime Extensions",
+        "shortName": "dongnime",
+        "website": "https://github.com/dongnime/extensions",
+        "signingKeyFingerprint": "ddf8ebc14135646c7a8fa695d65aa3861f52b7756adca7692b47c62d113adf63",
+    }
+}
+with REPO_DIR.joinpath("repo.json").open("w", encoding="utf-8") as repo_file:
+    json.dump(repo_meta, repo_file, ensure_ascii=False, indent=2)
+

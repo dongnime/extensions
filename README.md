@@ -10,6 +10,12 @@ Add this URL as a repo in Aniyomi or Anikku (Extensions → the "+" icon → pas
 https://raw.githubusercontent.com/dongnime/extensions/repo/index.min.json
 ```
 
+If your ISP blocks `raw.githubusercontent.com`, use the jsDelivr CDN mirror:
+
+```
+https://cdn.jsdelivr.net/gh/dongnime/extensions@repo/index.min.json
+```
+
 ## Extensions
 
 - **Anichin** (`id`) — [anichin.cafe](https://anichin.cafe), donghua streaming with Indonesian subtitles.

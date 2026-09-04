@@ -79,6 +79,8 @@ jobs:
           cp repo/apk/*.apk repo-branch/apk/
           cp repo/icon/*.png repo-branch/icon/ 2>/dev/null || true
           cp repo/index.min.json repo-branch/index.min.json
+          cp repo/index.json repo-branch/index.json 2>/dev/null || true
+          cp repo/repo.json repo-branch/repo.json 2>/dev/null || true
 
       - name: Commit and push repo branch
         working-directory: repo-branch
