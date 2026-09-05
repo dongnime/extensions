@@ -2,10 +2,10 @@
   {
     "name": "Aniyomi: Anichin",
     "pkg": "eu.kanade.tachiyomi.animeextension.id.anichin",
-    "apk": "aniyomi-id.anichin-v15.6.apk",
+    "apk": "aniyomi-id.anichin-v15.7.apk",
     "lang": "id",
-    "code": 6,
-    "version": "15.6",
+    "code": 7,
+    "version": "15.7",
     "nsfw": 0,
     "sources": [
       {
@@ -19,10 +19,10 @@
   {
     "name": "Aniyomi: Animexin",
     "pkg": "eu.kanade.tachiyomi.animeextension.id.animexin",
-    "apk": "aniyomi-id.animexin-v15.1.apk",
+    "apk": "aniyomi-id.animexin-v15.2.apk",
     "lang": "id",
-    "code": 1,
-    "version": "15.1",
+    "code": 2,
+    "version": "15.2",
     "nsfw": 0,
     "sources": [
       {
@@ -36,10 +36,10 @@
   {
     "name": "Aniyomi: Nekopoi",
     "pkg": "eu.kanade.tachiyomi.animeextension.id.nekopoi",
-    "apk": "aniyomi-id.nekopoi-v15.1.apk",
+    "apk": "aniyomi-id.nekopoi-v15.2.apk",
     "lang": "id",
-    "code": 1,
-    "version": "15.1",
+    "code": 2,
+    "version": "15.2",
     "nsfw": 1,
     "sources": [
       {
