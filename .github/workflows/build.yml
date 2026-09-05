@@ -37,18 +37,19 @@ jobs:
       - name: Prepare signing key
         run: echo "${{ secrets.SIGNING_KEY }}" | base64 -d > signingkey.jks
 
-      - name: Build Anichin APK
+      - name: Build Extension APKs
         env:
           ALIAS: ${{ secrets.ALIAS }}
           KEY_STORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-        run: ./gradlew :src:id:anichin:assembleRelease
+        run: ./gradlew assembleRelease
 
-      - name: Collect the built APK
+      - name: Collect the built APKs
         run: |
           mkdir -p repo/apk
-          apk=$(find src/id/anichin/build/outputs/apk/release -name '*.apk' | head -n1)
-          cp "$apk" "repo/apk/$(basename "$apk" | sed 's/-release\.apk$/.apk/')"
+          find src -name '*-release.apk' | while read -r apk; do
+            cp "$apk" "repo/apk/$(basename "$apk" | sed 's/-release\.apk$/.apk/')"
+          done
 
       - name: Download the extensions inspector
         run: |
