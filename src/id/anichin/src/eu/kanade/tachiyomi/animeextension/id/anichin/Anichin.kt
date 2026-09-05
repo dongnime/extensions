@@ -27,6 +27,7 @@ import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 import java.text.SimpleDateFormat
 import java.util.Locale
+import java.util.concurrent.TimeUnit
 
 class Anichin : Source() {
 
@@ -211,6 +212,12 @@ class Anichin : Source() {
     private val okruExtractor by lazy { OkruExtractor(client, headers) }
     private val dailymotionExtractor by lazy { DailymotionExtractor(client, headers) }
     private val cloudflareClient by lazy { client.newBuilder().addInterceptor(CloudflareInterceptor(client)).build() }
+    private val genericClient by lazy {
+        client.newBuilder()
+            .connectTimeout(5, TimeUnit.SECONDS)
+            .readTimeout(5, TimeUnit.SECONDS)
+            .build()
+    }
 
     override suspend fun getVideoList(episode: SEpisode): List<Video> {
         val doc = client.newCall(GET("$baseUrl${episode.url}", headers)).execute().asJsoup()
@@ -230,6 +237,11 @@ class Anichin : Source() {
                     ?: return@forEach
                 val iframeSrc = resolveUrl(rawSrc, baseUrl)
 
+                // Skip blacklisted / network-blocked / unstreamable mirrors immediately
+                if (MIRROR_BLACKLIST.any { iframeSrc.contains(it, ignoreCase = true) }) {
+                    return@forEach
+                }
+
                 runCatching {
                     when {
                         "ok.ru" in iframeSrc -> okruExtractor.videosFromUrl(iframeSrc, prefix = "$label - ")
@@ -242,13 +254,15 @@ class Anichin : Source() {
             val rawSrc = doc.selectFirst(".player-embed iframe, .video-content iframe, iframe")?.attr("src")?.trim()
             if (!rawSrc.isNullOrBlank()) {
                 val iframeSrc = resolveUrl(rawSrc, baseUrl)
-                runCatching {
-                    when {
-                        "ok.ru" in iframeSrc -> okruExtractor.videosFromUrl(iframeSrc, prefix = "Default - ")
-                        "dailymotion.com" in iframeSrc -> dailymotionExtractor.videosFromUrl(iframeSrc, prefix = "Default - ")
-                        else -> extractGenericEmbed(iframeSrc, "Default")
-                    }
-                }.getOrNull()?.let { videos.addAll(it) }
+                if (!MIRROR_BLACKLIST.any { iframeSrc.contains(it, ignoreCase = true) }) {
+                    runCatching {
+                        when {
+                            "ok.ru" in iframeSrc -> okruExtractor.videosFromUrl(iframeSrc, prefix = "Default - ")
+                            "dailymotion.com" in iframeSrc -> dailymotionExtractor.videosFromUrl(iframeSrc, prefix = "Default - ")
+                            else -> extractGenericEmbed(iframeSrc, "Default")
+                        }
+                    }.getOrNull()?.let { videos.addAll(it) }
+                }
             }
         }
 
@@ -291,7 +305,7 @@ class Anichin : Source() {
     private fun extractGenericEmbed(embedUrl: String, label: String): List<Video> {
         val embedHeaders = headers.newBuilder().set("Referer", "$baseUrl/").build()
         val html = runCatching {
-            client.newCall(GET(embedUrl, embedHeaders)).execute().body.string()
+            genericClient.newCall(GET(embedUrl, embedHeaders)).execute().body.string()
         }.getOrNull() ?: runCatching {
             cloudflareClient.newCall(GET(embedUrl, embedHeaders)).execute().body.string()
         }.getOrNull() ?: return emptyList()
@@ -382,7 +396,14 @@ class Anichin : Source() {
 
     override fun List<Video>.sortVideos(): List<Video> {
         val quality = preferences.getString(PREF_QUALITY_KEY, PREF_QUALITY_DEFAULT) ?: PREF_QUALITY_DEFAULT
-        return sortedByDescending { it.videoTitle.contains(quality, ignoreCase = true) }
+        return sortedWith(
+            compareByDescending<Video> { it.videoTitle.contains(quality, ignoreCase = true) }
+                .thenByDescending { it.videoTitle.contains("Adaptive", ignoreCase = true) }
+                .thenByDescending { it.videoTitle.contains("1080p", ignoreCase = true) }
+                .thenByDescending { it.videoTitle.contains("720p", ignoreCase = true) }
+                .thenByDescending { it.videoTitle.contains("480p", ignoreCase = true) }
+                .thenByDescending { it.videoTitle.contains("4K", ignoreCase = true) },
+        )
     }
 
     // ============================== Settings ==============================
@@ -406,6 +427,19 @@ class Anichin : Source() {
     }
 
     companion object {
+        private val MIRROR_BLACKLIST = listOf(
+            "rumble.com",
+            "rmb.anichin",
+            "abyssplayer.com",
+            "abyss.to",
+            "videoplayer.vip",
+            "rubyvid.com",
+            "listeamed.net",
+            "terabox.com",
+            "1024terabox.com",
+            "mirrored.to",
+        )
+
         private val EPISODE_SLUG_REGEX = Regex("""^(.+)-episode-\d+(?:-tamat)?-subtitle-indonesia$""")
         private val DATE_FORMATTER = SimpleDateFormat("MMMM d, yyyy", Locale.ENGLISH)
 

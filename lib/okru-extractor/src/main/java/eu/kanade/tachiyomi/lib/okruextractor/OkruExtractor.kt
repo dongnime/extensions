@@ -48,7 +48,33 @@ class OkruExtractor(private val client: OkHttpClient, private val headers: Heade
                 val hlsUrl = metadata.optString("hlsManifestUrl")
                 if (hlsUrl.isNotBlank() && hlsUrl.startsWith("http")) {
                     runCatching {
-                        videos.addAll(playlistUtils.extractFromHls(hlsUrl, videoNameGen = { "Okru:$it".addPrefix(prefix) }))
+                        videos.add(
+                            Video(
+                                hlsUrl,
+                                "Okru:Auto (Adaptive)".addPrefix(prefix),
+                                hlsUrl,
+                                headers,
+                                emptyList(),
+                                emptyList(),
+                            ),
+                        )
+                        val subStreams = playlistUtils.extractFromHls(hlsUrl, videoNameGen = { "Okru:$it".addPrefix(prefix) })
+                            .map { subVideo ->
+                                val fixedUrl = if (!subVideo.videoUrl.contains(".m3u8")) {
+                                    "${subVideo.videoUrl.trimEnd('/')}/index.m3u8"
+                                } else {
+                                    subVideo.videoUrl
+                                }
+                                Video(
+                                    fixedUrl,
+                                    subVideo.videoTitle,
+                                    fixedUrl,
+                                    subVideo.headers ?: headers,
+                                    subVideo.subtitleTracks,
+                                    subVideo.audioTracks,
+                                )
+                            }
+                        videos.addAll(subStreams)
                     }
                 }
 
@@ -60,11 +86,16 @@ class OkruExtractor(private val client: OkHttpClient, private val headers: Heade
                         val vName = vObj.optString("name")
                         if (vUrl.startsWith("https://")) {
                             val quality = if (fixQualities) fixQuality(vName) else vName
+                            val fixedMp4Url = if (vUrl.contains(".net/?")) {
+                                vUrl.replace(".net/?", ".net/video.mp4?")
+                            } else {
+                                vUrl
+                            }
                             videos.add(
                                 Video(
-                                    vUrl,
+                                    fixedMp4Url,
                                     "Okru:$quality".addPrefix(prefix),
-                                    vUrl,
+                                    fixedMp4Url,
                                     headers,
                                     emptyList(),
                                     emptyList(),
@@ -83,7 +114,37 @@ class OkruExtractor(private val client: OkHttpClient, private val headers: Heade
         return when {
             "ondemandHls" in videoString -> {
                 val playlistUrl = videoString.extractLink("ondemandHls")
-                playlistUtils.extractFromHls(playlistUrl, videoNameGen = { "Okru:$it".addPrefix(prefix) })
+                val hlsVideos = mutableListOf<Video>()
+                if (playlistUrl.isNotBlank() && playlistUrl.startsWith("http")) {
+                    hlsVideos.add(
+                        Video(
+                            playlistUrl,
+                            "Okru:Auto (Adaptive)".addPrefix(prefix),
+                            playlistUrl,
+                            headers,
+                            emptyList(),
+                            emptyList(),
+                        ),
+                    )
+                }
+                val subStreams = playlistUtils.extractFromHls(playlistUrl, videoNameGen = { "Okru:$it".addPrefix(prefix) })
+                    .map { subVideo ->
+                        val fixedUrl = if (!subVideo.videoUrl.contains(".m3u8")) {
+                            "${subVideo.videoUrl.trimEnd('/')}/index.m3u8"
+                        } else {
+                            subVideo.videoUrl
+                        }
+                        Video(
+                            fixedUrl,
+                            subVideo.videoTitle,
+                            fixedUrl,
+                            subVideo.headers ?: headers,
+                            subVideo.subtitleTracks,
+                            subVideo.audioTracks,
+                        )
+                    }
+                hlsVideos.addAll(subStreams)
+                hlsVideos
             }
 
             "ondemandDash" in videoString -> {
@@ -115,10 +176,15 @@ class OkruExtractor(private val client: OkHttpClient, private val headers: Heade
             val videoQuality = "Okru:$quality".addPrefix(prefix)
 
             if (videoUrl.startsWith("https://")) {
+                val fixedMp4Url = if (videoUrl.contains(".net/?")) {
+                    videoUrl.replace(".net/?", ".net/video.mp4?")
+                } else {
+                    videoUrl
+                }
                 Video(
-                    videoUrl,
+                    fixedMp4Url,
                     videoQuality,
-                    videoUrl,
+                    fixedMp4Url,
                     headers,
                     emptyList(),
                     emptyList(),
