@@ -1,6 +1,6 @@
 [versions]
 android-gradle = "9.2.1"
-coroutines = "1.10.2"
+coroutines = "1.11.0"
 junit = "4.13.2"
 kotlin-gradle = "2.3.21"
 ktlint = "1.8.0"
