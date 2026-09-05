@@ -6,7 +6,7 @@
 ![Platform](https://img.shields.io/badge/platform-Aniyomi%20%7C%20Anikku-blueviolet?style=flat-square)
 ![License](https://img.shields.io/badge/license-Apache--2.0-blue?style=flat-square)
 
-Repositori ekstensi resmi **Dongnime** untuk aplikasi [Aniyomi](https://aniyomi.org) dan [Anikku](https://github.com/braimax/anikku), menyediakan sumber streaming donghua, anime, dan animasi dengan takarir bahasa Indonesia (*Indonesian sub*).
+Repositori ekstensi resmi **Dongnime** untuk aplikasi [Aniyomi](https://aniyomi.org) dan [Anikku](https://anikku-app.github.io/), menyediakan sumber streaming donghua, anime, dan animasi dengan takarir bahasa Indonesia (*Indonesian sub*).
 
 ---
 
