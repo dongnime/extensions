@@ -63,9 +63,14 @@ if REPO_APK_DIR.is_dir():
             continue
         package_name = pkg_match[1]
 
-        icon_match = APPLICATION_ICON_320_REGEX.search(badging) or APPLICATION_ICON_FALLBACK_REGEX.search(badging)
-        if icon_match:
-            icon_path = icon_match[1]
+        icons = re.findall(r"^application-icon-(\d+):'([^']+)'", badging, re.MULTILINE)
+        if icons:
+            icon_path = sorted(icons, key=lambda x: int(x[0]), reverse=True)[0][1]
+        else:
+            fallback = APPLICATION_ICON_FALLBACK_REGEX.search(badging)
+            icon_path = fallback[1] if fallback else None
+
+        if icon_path:
             try:
                 with ZipFile(apk) as z, z.open(icon_path) as i, (
                     REPO_ICON_DIR / f"{package_name}.png"
