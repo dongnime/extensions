@@ -17,6 +17,23 @@
     ]
   },
   {
+    "name": "Aniyomi: Animexin",
+    "pkg": "eu.kanade.tachiyomi.animeextension.id.animexin",
+    "apk": "aniyomi-id.animexin-v15.1.apk",
+    "lang": "id",
+    "code": 1,
+    "version": "15.1",
+    "nsfw": 0,
+    "sources": [
+      {
+        "name": "AnimeXin",
+        "lang": "id",
+        "id": "9090443572406184932",
+        "baseUrl": "https://animexin.dev"
+      }
+    ]
+  },
+  {
     "name": "Aniyomi: Nekopoi",
     "pkg": "eu.kanade.tachiyomi.animeextension.id.nekopoi",
     "apk": "aniyomi-id.nekopoi-v15.1.apk",
