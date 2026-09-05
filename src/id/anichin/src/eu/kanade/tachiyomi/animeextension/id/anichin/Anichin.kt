@@ -20,6 +20,7 @@ import extensions.utils.Source
 import extensions.utils.asJsoup
 import keiyoushi.utils.addBaseUrlPreference
 import keiyoushi.utils.addListPreference
+import okhttp3.Headers
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.Response
 import org.jsoup.Jsoup
@@ -266,12 +267,16 @@ class Anichin : Source() {
             }
         }
 
-        // Direct download hosters fallback (e.g. Mediafire) from .soraddlx / .soradl
+        // Direct download hosters fallback (e.g. Mediafire, Pixeldrain) from .soraddlx / .soradl
         doc.select(".soraddlx .soraurlx, .soradl .soraurlx").forEach { sora ->
             val quality = sora.selectFirst("strong")?.text()?.trim().orEmpty()
             sora.select("a[href*='mediafire.com']").forEach { a ->
                 val mfUrl = a.attr("href").trim()
                 extractMediafire(mfUrl, quality)?.let { videos.add(it) }
+            }
+            sora.select("a[href*='pixeldrain.com']").forEach { a ->
+                val pdUrl = a.attr("href").trim()
+                extractPixeldrain(pdUrl, quality)?.let { videos.add(it) }
             }
         }
 
@@ -289,11 +294,30 @@ class Anichin : Source() {
                 directUrl,
                 qualityLabel,
                 directUrl,
-                headers,
+                Headers.Builder().add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36").build(),
                 emptyList(),
                 emptyList(),
             )
         }.getOrNull()
+    }
+
+    private fun extractPixeldrain(url: String, quality: String): Video? {
+        val fileId = when {
+            "/u/" in url -> url.substringAfter("/u/").substringBefore("?").substringBefore("/")
+            "/file/" in url -> url.substringAfter("/file/").substringBefore("?").substringBefore("/")
+            else -> return null
+        }
+        if (fileId.isBlank()) return null
+        val directUrl = "https://pixeldrain.com/api/file/$fileId"
+        val qualityLabel = if (quality.isNotBlank()) "Pixeldrain - $quality" else "Pixeldrain"
+        return Video(
+            directUrl,
+            qualityLabel,
+            directUrl,
+            Headers.Builder().add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36").build(),
+            emptyList(),
+            emptyList(),
+        )
     }
 
     /**
@@ -402,6 +426,7 @@ class Anichin : Source() {
                 .thenByDescending { it.videoTitle.contains("1080p", ignoreCase = true) }
                 .thenByDescending { it.videoTitle.contains("720p", ignoreCase = true) }
                 .thenByDescending { it.videoTitle.contains("480p", ignoreCase = true) }
+                .thenByDescending { it.videoTitle.contains("360p", ignoreCase = true) }
                 .thenByDescending { it.videoTitle.contains("4K", ignoreCase = true) },
         )
     }
