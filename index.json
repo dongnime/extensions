@@ -15,5 +15,22 @@
         "baseUrl": "https://anichin.cafe"
       }
     ]
+  },
+  {
+    "name": "Aniyomi: Nekopoi",
+    "pkg": "eu.kanade.tachiyomi.animeextension.id.nekopoi",
+    "apk": "aniyomi-id.nekopoi-v15.1.apk",
+    "lang": "id",
+    "code": 1,
+    "version": "15.1",
+    "nsfw": 1,
+    "sources": [
+      {
+        "name": "Nekopoi",
+        "lang": "id",
+        "id": "7073589375897212735",
+        "baseUrl": "https://nekopoi.care"
+      }
+    ]
   }
 ]
