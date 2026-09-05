@@ -6,6 +6,7 @@ on:
     paths-ignore:
       - '**.md'
       - '.github/ISSUE_TEMPLATE/**'
+      - '.github/dependabot.yml'
       - 'LICENSE'
   workflow_dispatch:
 

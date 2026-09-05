@@ -1,0 +1,17 @@
+version: 2
+updates:
+  # Otomatis cek pembaruan GitHub Actions secara berkala
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    commit-message:
+      prefix: "ci"
+
+  # Otomatis cek dependensi Gradle
+  - package-ecosystem: "gradle"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    commit-message:
+      prefix: "build"
