@@ -19,6 +19,7 @@ https://cdn.jsdelivr.net/gh/dongnime/extensions@repo/index.min.json
 ## Extensions
 
 - **Anichin** (`id`) — [anichin.cafe](https://anichin.cafe), donghua streaming with Indonesian subtitles.
+- **Animexin** (`id`) — [animexin.dev](https://animexin.dev), donghua streaming with Indonesian subtitles.
 - **Nekopoi** (`id`, 18+) — [nekopoi.care](https://nekopoi.care), adult animation / hentai streaming with Indonesian subtitles.
 
 ## Disclaimer
