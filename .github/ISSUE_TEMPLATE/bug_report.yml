@@ -1,0 +1,93 @@
+name: 🐛 Bug Report
+description: Laporkan kendala atau masalah pemutaran pada ekstensi
+title: "[Bug] <Nama Ekstensi>: <Deskripsi singkat masalah>"
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Terima kasih telah melaporkan kendala pada ekstensi Dongnime!
+        Sebelum mengisi formulir ini:
+        1. Pastikan Anda telah mengupdate ekstensi ke versi terbaru melalui tab *Extensions* di Aniyomi.
+        2. Coba periksa apakah website aslinya sedang *down* atau terkena *maintenance*.
+
+  - type: dropdown
+    id: extension
+    attributes:
+      label: Ekstensi yang Bermasalah
+      description: Pilih ekstensi yang mengalami kendala
+      options:
+        - Anichin
+        - AnimeXin
+        - Nekopoi
+        - Lainnya / Repositori Umum
+    validations:
+      required: true
+
+  - type: input
+    id: ext_version
+    attributes:
+      label: Versi Ekstensi
+      description: Contoh: 15.8, 15.3, dsb (dapat dilihat di tab Extensions)
+      placeholder: "15.8"
+    validations:
+      required: true
+
+  - type: input
+    id: app_version
+    attributes:
+      label: Versi Aplikasi & Tipe Perangkat
+      description: Contoh: Aniyomi v0.15.3 / Anikku v1.2.0 - Android 14 (Samsung A52)
+      placeholder: "Aniyomi v0.15.3 - Android 14"
+    validations:
+      required: true
+
+  - type: input
+    id: title_episode
+    attributes:
+      label: Judul Serial & Nomor Episode
+      description: Contoh: Tales of Herding Gods - Episode 98
+      placeholder: "Tales of Herding Gods - Episode 98"
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Deskripsi Masalah
+      description: Jelaskan masalah yang terjadi secara detail
+      placeholder: "Video tidak dapat diputar saat memilih server Dailymotion / link mirror, muncul pesan error ..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Langkah Reproduksi Masalah
+      description: Urutan langkah untuk memicu masalah tersebut
+      value: |
+        1. Buka ekstensi ...
+        2. Pilih judul ...
+        3. Buka episode ...
+        4. Muncul error / video tidak jalan
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs_or_screenshots
+    attributes:
+      label: Log Error / Screenshot
+      description: Lampirkan screenshot layar error atau error log jika ada
+      placeholder: "Tarik dan letakkan gambar di sini..."
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Konfirmasi
+      options:
+        - label: Saya sudah memastikan koneksi internet stabil dan ekstensi menggunakan versi terbaru.
+          required: true
+        - label: Saya sudah memeriksa bahwa serial/episode tersebut dapat dibuka di browser biasa.
+          required: true

@@ -1,0 +1,55 @@
+name: ✨ Permintaan Ekstensi Baru
+description: Ajukan website streaming donghua / anime baru untuk ditambahkan ke repositori
+title: "[Request] <Nama Website Streaming>"
+labels: ["enhancement", "extension-request"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Terima kasih atas saran Anda! Mohon lengkapi informasi website berikut agar tim developer dapat menganalisis struktur situsnya.
+
+  - type: input
+    id: website_name
+    attributes:
+      label: Nama Website / Sumber
+      placeholder: "Contoh: Kuronime, Otakudesu, Samehadaku"
+    validations:
+      required: true
+
+  - type: input
+    id: website_url
+    attributes:
+      label: Alamat URL Website
+      placeholder: "https://example.com"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: content_type
+    attributes:
+      label: Kategori Konten
+      options:
+        - Donghua (Animasi Mandarin)
+        - Anime (Animasi Jepang)
+        - Hentai / Dewasa (18+)
+        - Lainnya
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: sub_language
+    attributes:
+      label: Bahasa Subtitle Tersedia
+      options:
+        - label: Subtitle Indonesia (Hardsub / Softsub)
+          required: true
+        - label: Subtitle Inggris (English)
+
+  - type: textarea
+    id: additional_info
+    attributes:
+      label: Catatan Tambahan
+      description: Tuliskan informasi lain yang berguna (misal: jenis video player yang digunakan, apakah butuh login/tidak, dsb)
+      placeholder: "Website menggunakan pemutar video Dailymotion dan direktori videonya update setiap hari..."
+    validations:
+      required: false
