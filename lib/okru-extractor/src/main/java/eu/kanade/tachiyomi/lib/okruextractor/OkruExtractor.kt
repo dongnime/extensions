@@ -11,7 +11,7 @@ import okhttp3.OkHttpClient
 import org.json.JSONObject
 
 class OkruExtractor(private val client: OkHttpClient, private val headers: Headers = Headers.EMPTY) {
-    private val playlistUtils by lazy { PlaylistUtils(client) }
+    private val playlistUtils by lazy { PlaylistUtils(client, headers) }
 
     private fun fixQuality(quality: String): String {
         val qualities = listOf(
@@ -41,12 +41,8 @@ class OkruExtractor(private val client: OkHttpClient, private val headers: Heade
         runCatching {
             val json = JSONObject(videoString)
             val flashvars = json.optJSONObject("flashvars") ?: json
-            val metadataStr = flashvars.optString("metadata")
-            val metadata = if (!metadataStr.isNullOrBlank()) {
-                runCatching { JSONObject(metadataStr) }.getOrNull()
-            } else {
-                flashvars.optJSONObject("metadata")
-            }
+            val metadata = flashvars.optJSONObject("metadata")
+                ?: runCatching { JSONObject(flashvars.optString("metadata")) }.getOrNull()
 
             if (metadata != null) {
                 val hlsUrl = metadata.optString("hlsManifestUrl")

@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION_ERROR")
+
 package eu.kanade.tachiyomi.animeextension.id.anichin
 
 import android.util.Base64
@@ -206,7 +208,7 @@ class Anichin : Source() {
     // ============================== Hosters & Videos ==============================
 
     private val playlistUtils by lazy { PlaylistUtils(client, headers) }
-    private val okruExtractor by lazy { OkruExtractor(client) }
+    private val okruExtractor by lazy { OkruExtractor(client, headers) }
     private val dailymotionExtractor by lazy { DailymotionExtractor(client, headers) }
     private val cloudflareClient by lazy { client.newBuilder().addInterceptor(CloudflareInterceptor(client)).build() }
 
@@ -214,16 +216,18 @@ class Anichin : Source() {
         val doc = client.newCall(GET("$baseUrl${episode.url}", headers)).execute().asJsoup()
 
         val mirrorOptions = doc.select("select.mirror option[value]")
-        val videos = if (mirrorOptions.isNotEmpty()) {
-            mirrorOptions.flatMap { option ->
+        val videos = mutableListOf<Video>()
+
+        if (mirrorOptions.isNotEmpty()) {
+            mirrorOptions.forEach { option ->
                 val label = option.text().trim()
                 val base64Value = option.attr("value").trim()
-                if (label.isBlank() || base64Value.isBlank()) return@flatMap emptyList()
+                if (label.isBlank() || base64Value.isBlank()) return@forEach
 
                 val decodedHtml = runCatching { String(Base64.decode(base64Value, Base64.DEFAULT)) }
-                    .getOrNull() ?: return@flatMap emptyList()
+                    .getOrNull() ?: return@forEach
                 val rawSrc = Jsoup.parse(decodedHtml).selectFirst("iframe")?.attr("src")?.trim()
-                    ?: return@flatMap emptyList()
+                    ?: return@forEach
                 val iframeSrc = resolveUrl(rawSrc, baseUrl)
 
                 runCatching {
@@ -232,7 +236,7 @@ class Anichin : Source() {
                         "dailymotion.com" in iframeSrc -> dailymotionExtractor.videosFromUrl(iframeSrc, prefix = "$label - ")
                         else -> extractGenericEmbed(iframeSrc, label)
                     }
-                }.getOrElse { emptyList() }
+                }.getOrNull()?.let { videos.addAll(it) }
             }
         } else {
             val rawSrc = doc.selectFirst(".player-embed iframe, .video-content iframe, iframe")?.attr("src")?.trim()
@@ -244,19 +248,44 @@ class Anichin : Source() {
                         "dailymotion.com" in iframeSrc -> dailymotionExtractor.videosFromUrl(iframeSrc, prefix = "Default - ")
                         else -> extractGenericEmbed(iframeSrc, "Default")
                     }
-                }.getOrElse { emptyList() }
-            } else {
-                emptyList()
+                }.getOrNull()?.let { videos.addAll(it) }
             }
         }
 
-        return videos.sortVideos()
+        // Direct download hosters fallback (e.g. Mediafire) from .soraddlx / .soradl
+        doc.select(".soraddlx .soraurlx, .soradl .soraurlx").forEach { sora ->
+            val quality = sora.selectFirst("strong")?.text()?.trim().orEmpty()
+            sora.select("a[href*='mediafire.com']").forEach { a ->
+                val mfUrl = a.attr("href").trim()
+                extractMediafire(mfUrl, quality)?.let { videos.add(it) }
+            }
+        }
+
+        return videos.distinctBy { it.videoUrl }.sortVideos()
+    }
+
+    private fun extractMediafire(url: String, quality: String): Video? {
+        return runCatching {
+            val doc = client.newCall(GET(url, headers)).execute().asJsoup()
+            val directUrl = doc.selectFirst("#downloadButton, a[aria-label='Download file']")
+                ?.attr("href")?.trim() ?: return null
+            if (!directUrl.startsWith("http")) return null
+            val qualityLabel = if (quality.isNotBlank()) "Mediafire - $quality" else "Mediafire"
+            Video(
+                directUrl,
+                qualityLabel,
+                directUrl,
+                headers,
+                emptyList(),
+                emptyList(),
+            )
+        }.getOrNull()
     }
 
     /**
      * Fallback for hosts with no dedicated extractor (anichin.stream's own JWPlayer,
      * rumble.com, player.abyssplayer.com, morencius.com): fetch the embed page, look
-     * for direct .m3u8 URLs or packed JS containing HLS streams, resolve relative paths,
+     * for direct .m3u8/.mp4 URLs or packed JS containing streams, resolve relative paths,
      * and extract video qualities.
      */
     private fun extractGenericEmbed(embedUrl: String, label: String): List<Video> {
@@ -279,6 +308,24 @@ class Anichin : Source() {
             }
         }
 
+        // Direct MP4 in HTML
+        for (match in MP4_REGEX.findAll(html)) {
+            val raw = match.groupValues[1].ifEmpty { match.groupValues[2] }
+            if (raw.isNotBlank() && !raw.contains("placeholder") && !raw.contains("loading")) {
+                val resolved = resolveUrl(raw, embedUrl)
+                return listOf(
+                    Video(
+                        resolved,
+                        label,
+                        resolved,
+                        headers.newBuilder().set("Referer", embedUrl).build(),
+                        emptyList(),
+                        emptyList(),
+                    ),
+                )
+            }
+        }
+
         // 2. Packed JS scripts (e.g. anichin.stream JWPlayer setup)
         for (match in PACKED_JS_REGEX.findAll(html)) {
             val packedScript = match.value
@@ -291,6 +338,22 @@ class Anichin : Source() {
                         playlistUtils.extractFromHls(resolved, referer = embedUrl, videoNameGen = { q -> "$label - $q" })
                     }.getOrElse { emptyList() }
                     if (videos.isNotEmpty()) return videos
+                }
+            }
+            for (mp4Match in MP4_REGEX.findAll(unpacked)) {
+                val raw = mp4Match.groupValues[1].ifEmpty { mp4Match.groupValues[2] }
+                if (raw.isNotBlank() && !raw.contains("placeholder") && !raw.contains("loading")) {
+                    val resolved = resolveUrl(raw, embedUrl)
+                    return listOf(
+                        Video(
+                            resolved,
+                            label,
+                            resolved,
+                            headers.newBuilder().set("Referer", embedUrl).build(),
+                            emptyList(),
+                            emptyList(),
+                        ),
+                    )
                 }
             }
         }
@@ -399,6 +462,10 @@ class Anichin : Source() {
 
         private val M3U8_REGEX = Regex(
             """(?:file|src)\s*:\s*["']([^"']+\.m3u8[^"']*)["']|["']([^"'\s]+\.m3u8[^"'\s]*)["']""",
+            RegexOption.IGNORE_CASE,
+        )
+        private val MP4_REGEX = Regex(
+            """(?:file|src)\s*:\s*["']([^"']+\.mp4[^"']*)["']|["']([^"'\s]+\.mp4[^"'\s]*)["']""",
             RegexOption.IGNORE_CASE,
         )
         private val PACKED_JS_REGEX = Regex(
