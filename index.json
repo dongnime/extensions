@@ -7,7 +7,7 @@
     "code": 8,
     "version": "15.8",
     "nsfw": 0,
-    "sha256": "eaf476c270c5e90144b896c4d0b62acb61eef0eee857ecfce7e151aa0366f67f",
+    "sha256": "6466d44c8cf3f5ab363657ef4bd043312aca0c466fbe258269ad87994f4bc8f8",
     "sources": [
       {
         "name": "Anichin",
@@ -25,7 +25,7 @@
     "code": 3,
     "version": "15.3",
     "nsfw": 0,
-    "sha256": "7a0bf297caeebde2773e0ff1e56068a499625de9254e4ef8380d497bb974f828",
+    "sha256": "c81eb38eccd5ad838f3685a1e4eeaa9790b2fccb81ca90deafe660f8e4781c74",
     "sources": [
       {
         "name": "AnimeXin",
@@ -43,7 +43,7 @@
     "code": 3,
     "version": "15.3",
     "nsfw": 1,
-    "sha256": "56136f04308f062d623b7365b11c077075a217308fea701eb6eb6d61704373b0",
+    "sha256": "73ac5905cccee827e77cef0e1b46616b7e8ac72433836e3b6fe9cb3016f77544",
     "sources": [
       {
         "name": "Nekopoi",
@@ -56,12 +56,12 @@
   {
     "name": "Aniyomi: Oploverz",
     "pkg": "eu.kanade.tachiyomi.animeextension.id.oploverz",
-    "apk": "aniyomi-id.oploverz-v15.3.apk",
+    "apk": "aniyomi-id.oploverz-v15.4.apk",
     "lang": "id",
-    "code": 3,
-    "version": "15.3",
+    "code": 4,
+    "version": "15.4",
     "nsfw": 0,
-    "sha256": "08ae3049198a857d0980576ef9a21270189fb13a2e39f3121dda7c6a3d4054a2",
+    "sha256": "dc6ed88553baa0800736c9b7a01c00542b7c79bf0069b35cf33f66133b27a83b",
     "sources": [
       {
         "name": "Oploverz",
@@ -74,12 +74,12 @@
   {
     "name": "Aniyomi: Samehadaku",
     "pkg": "eu.kanade.tachiyomi.animeextension.id.samehadaku",
-    "apk": "aniyomi-id.samehadaku-v15.3.apk",
+    "apk": "aniyomi-id.samehadaku-v15.4.apk",
     "lang": "id",
-    "code": 3,
-    "version": "15.3",
+    "code": 4,
+    "version": "15.4",
     "nsfw": 0,
-    "sha256": "66b7c54dd12cc45a1199ada8bd6d698020c88ee17f71e48b96f54a0def28979d",
+    "sha256": "bb4a27176a89316fa2d529e62a236b9b4da4e75c887fdeed0a144857dbd63c34",
     "sources": [
       {
         "name": "Samehadaku",
