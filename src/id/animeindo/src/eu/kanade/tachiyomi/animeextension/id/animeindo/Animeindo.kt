@@ -23,6 +23,7 @@ import keiyoushi.utils.addListPreference
 import keiyoushi.utils.bodyString
 import keiyoushi.utils.useAsJsoup
 import okhttp3.Headers
+import okhttp3.Request
 import org.json.JSONObject
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
@@ -40,10 +41,9 @@ class Animeindo : Source() {
 
     override val supportsLatest = true
 
-    override fun headersBuilder(): Headers.Builder = Headers.Builder()
+    override fun headersBuilder(): Headers.Builder = super.headersBuilder()
         .add("User-Agent", USER_AGENT)
         .add("Referer", "$baseUrl/")
-        .add("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
 
     private val bloggerExtractor by lazy { BloggerExtractor(client) }
     private val dailymotionExtractor by lazy { DailymotionExtractor(client, headers) }
@@ -120,7 +120,7 @@ class Animeindo : Source() {
 
             animeList.add(
                 SAnime.create().apply {
-                    this.url = absUrl
+                    setUrlWithoutDomain(rawHref)
                     this.title = title
                     this.thumbnail_url = posterUrl
                 },
@@ -137,7 +137,8 @@ class Animeindo : Source() {
     // ============================== Details ==============================
 
     override suspend fun getAnimeDetails(anime: SAnime): SAnime {
-        val response = client.newCall(GET(anime.url, headers)).awaitSuccess()
+        val fullUrl = if (anime.url.startsWith("http")) anime.url else "$baseUrl${anime.url}"
+        val response = client.newCall(GET(fullUrl, headers)).awaitSuccess()
         val doc = response.useAsJsoup()
 
         return anime.apply {
@@ -171,14 +172,15 @@ class Animeindo : Source() {
     // ============================== Episodes ==============================
 
     override suspend fun getEpisodeList(anime: SAnime): List<SEpisode> {
-        val response = client.newCall(GET(anime.url, headers)).awaitSuccess()
+        val fullUrl = if (anime.url.startsWith("http")) anime.url else "$baseUrl${anime.url}"
+        val response = client.newCall(GET(fullUrl, headers)).awaitSuccess()
         val doc = response.useAsJsoup()
 
         val episodeElements = doc.select("a[href*=\"/episode/\"]")
         if (episodeElements.isEmpty() || anime.url.contains("/movie/")) {
             return listOf(
                 SEpisode.create().apply {
-                    url = anime.url
+                    setUrlWithoutDomain(anime.url)
                     name = "Full Movie"
                     episode_number = 1f
                 },
@@ -188,7 +190,6 @@ class Animeindo : Source() {
         val episodes = mutableListOf<SEpisode>()
         for (a in episodeElements) {
             val href = a.attr("href")
-            val absUrl = if (href.startsWith("http")) href else "$baseUrl$href"
 
             val cardContainer = a.parent()
             val title = cardContainer?.selectFirst("h3")?.text()?.trim()
@@ -209,7 +210,7 @@ class Animeindo : Source() {
 
             episodes.add(
                 SEpisode.create().apply {
-                    url = absUrl
+                    setUrlWithoutDomain(href)
                     name = displayName
                     episode_number = epNum
                 },
@@ -219,11 +220,24 @@ class Animeindo : Source() {
         return episodes.sortedByDescending { it.episode_number }
     }
 
+    override fun videoListRequest(episode: SEpisode): Request {
+        val fullUrl = if (episode.url.startsWith("http")) episode.url else "$baseUrl${episode.url}"
+        return GET(fullUrl, headers)
+    }
+
+    override fun getAnimeUrl(anime: SAnime): String =
+        if (anime.url.startsWith("http")) anime.url else "$baseUrl${anime.url}"
+
+    override fun getEpisodeUrl(episode: SEpisode): String =
+        if (episode.url.startsWith("http")) episode.url else "$baseUrl${episode.url}"
+
     // ============================== Video Resolution ==============================
 
     override suspend fun getVideoList(episode: SEpisode): List<Video> {
-        val response = client.newCall(GET(episode.url, headers)).awaitSuccess()
-        val doc = response.useAsJsoup()
+        val fullUrl = if (episode.url.startsWith("http")) episode.url else "$baseUrl${episode.url}"
+        val doc = runCatching {
+            client.newCall(GET(fullUrl, headers)).awaitSuccess().useAsJsoup()
+        }.getOrNull() ?: return emptyList()
 
         val videos = mutableListOf<Video>()
         val servers = extractServers(doc)
@@ -256,7 +270,8 @@ class Animeindo : Source() {
                 val label = serverObj.optString("label", "Server").trim()
                 val link = serverObj.optString("link").trim()
                 if (link.isNotBlank()) {
-                    servers.add(Server(label, link))
+                    val resolvedLink = resolveUrl(link, baseUrl)
+                    servers.add(Server(label, resolvedLink))
                 }
             }
         }
@@ -266,7 +281,8 @@ class Animeindo : Source() {
             doc.select("iframe[src]").forEach { iframe ->
                 val src = iframe.attr("abs:src").ifEmpty { iframe.attr("src") }.trim()
                 if (src.isNotBlank() && !src.contains("about:blank")) {
-                    servers.add(Server("Default", src))
+                    val resolvedSrc = resolveUrl(src, baseUrl)
+                    servers.add(Server("Default", resolvedSrc))
                 }
             }
         }
@@ -275,12 +291,14 @@ class Animeindo : Source() {
     }
 
     private suspend fun extractVideosFromServer(embedUrl: String, label: String): List<Video> {
+        val resolvedEmbedUrl = resolveUrl(embedUrl, baseUrl)
         val embedHeaders = headers.newBuilder()
-            .set("User-Agent", USER_AGENT)
             .set("Referer", "$baseUrl/")
             .build()
-        val html = client.newCall(GET(embedUrl, embedHeaders)).awaitSuccess().bodyString()
-        val doc = Jsoup.parse(html, embedUrl)
+        val html = runCatching {
+            client.newCall(GET(resolvedEmbedUrl, embedHeaders)).awaitSuccess().bodyString()
+        }.getOrNull() ?: return emptyList()
+        val doc = Jsoup.parse(html, resolvedEmbedUrl)
 
         val videos = mutableListOf<Video>()
 
@@ -291,16 +309,17 @@ class Animeindo : Source() {
             if (src.isBlank()) continue
             if (src.contains(".m3u8")) {
                 val hlsVideos = runCatching {
-                    playlistUtils.extractFromHls(src, referer = embedUrl, videoNameGen = { q -> "$label - $q" })
+                    playlistUtils.extractFromHls(src, referer = resolvedEmbedUrl, videoNameGen = { q -> "$label - $q" })
                 }.getOrElse { emptyList() }
                 videos.addAll(hlsVideos)
             } else {
                 val videoHeaders = headers.newBuilder()
-                    .set("User-Agent", USER_AGENT)
-                    .set("Referer", embedUrl)
+                    .set("Referer", resolvedEmbedUrl)
                     .build()
+                val qualityMatch = Regex("""(\d{3,4}p)""").find(src)?.value
+                val qualityLabel = if (qualityMatch != null) "$label - $qualityMatch" else "$label - Direct"
                 videos.add(
-                    Video(src, "$label - Direct", src, videoHeaders, emptyList(), emptyList()),
+                    Video(src, qualityLabel, src, videoHeaders, emptyList(), emptyList()),
                 )
             }
         }
@@ -310,8 +329,9 @@ class Animeindo : Source() {
         // 2. <iframe> tags
         val iframeElements = doc.select("iframe[src]")
         for (iframe in iframeElements) {
-            val iframeSrc = iframe.attr("abs:src").ifEmpty { iframe.attr("src") }
-            if (iframeSrc.isBlank()) continue
+            val rawIframeSrc = iframe.attr("abs:src").ifEmpty { iframe.attr("src") }
+            if (rawIframeSrc.isBlank()) continue
+            val iframeSrc = resolveUrl(rawIframeSrc, resolvedEmbedUrl)
 
             when {
                 "ok.ru" in iframeSrc -> {
@@ -335,27 +355,27 @@ class Animeindo : Source() {
         if (videos.isNotEmpty()) return videos
 
         // 3. Fallback: check direct m3u8/mp4 or packed JS in the embed page itself
-        videos.addAll(extractGenericEmbed(embedUrl, label, html))
+        videos.addAll(extractGenericEmbed(resolvedEmbedUrl, label, html))
 
         return videos
     }
 
     private suspend fun extractGenericEmbed(embedUrl: String, label: String, preloadedHtml: String? = null): List<Video> {
+        val resolvedEmbedUrl = resolveUrl(embedUrl, baseUrl)
         val embedHeaders = headers.newBuilder()
-            .set("User-Agent", USER_AGENT)
             .set("Referer", "$baseUrl/")
             .build()
         val html = preloadedHtml ?: runCatching {
-            client.newCall(GET(embedUrl, embedHeaders)).awaitSuccess().bodyString()
+            client.newCall(GET(resolvedEmbedUrl, embedHeaders)).awaitSuccess().bodyString()
         }.getOrNull() ?: return emptyList()
 
         // Search direct .m3u8
         for (match in M3U8_REGEX.findAll(html)) {
             val raw = match.groupValues[1]
             if (raw.isNotBlank()) {
-                val resolved = resolveUrl(raw, embedUrl)
+                val resolved = resolveUrl(raw, resolvedEmbedUrl)
                 val hlsVideos = runCatching {
-                    playlistUtils.extractFromHls(resolved, referer = embedUrl, videoNameGen = { q -> "$label - $q" })
+                    playlistUtils.extractFromHls(resolved, referer = resolvedEmbedUrl, videoNameGen = { q -> "$label - $q" })
                 }.getOrElse { emptyList() }
                 if (hlsVideos.isNotEmpty()) return hlsVideos
             }
@@ -365,13 +385,14 @@ class Animeindo : Source() {
         for (match in MP4_REGEX.findAll(html)) {
             val raw = match.groupValues[1]
             if (raw.isNotBlank() && !raw.contains("placeholder") && !raw.contains("loading")) {
-                val resolved = resolveUrl(raw, embedUrl)
+                val resolved = resolveUrl(raw, resolvedEmbedUrl)
                 val videoHeaders = headers.newBuilder()
-                    .set("User-Agent", USER_AGENT)
-                    .set("Referer", embedUrl)
+                    .set("Referer", resolvedEmbedUrl)
                     .build()
+                val qualityMatch = Regex("""(\d{3,4}p)""").find(resolved)?.value
+                val qualityLabel = if (qualityMatch != null) "$label - $qualityMatch" else label
                 return listOf(
-                    Video(resolved, label, resolved, videoHeaders, emptyList(), emptyList()),
+                    Video(resolved, qualityLabel, resolved, videoHeaders, emptyList(), emptyList()),
                 )
             }
         }
@@ -383,9 +404,9 @@ class Animeindo : Source() {
             for (m3u8 in M3U8_REGEX.findAll(unpacked)) {
                 val raw = m3u8.groupValues[1]
                 if (raw.isNotBlank()) {
-                    val resolved = resolveUrl(raw, embedUrl)
+                    val resolved = resolveUrl(raw, resolvedEmbedUrl)
                     val hlsVideos = runCatching {
-                        playlistUtils.extractFromHls(resolved, referer = embedUrl, videoNameGen = { q -> "$label - $q" })
+                        playlistUtils.extractFromHls(resolved, referer = resolvedEmbedUrl, videoNameGen = { q -> "$label - $q" })
                     }.getOrElse { emptyList() }
                     if (hlsVideos.isNotEmpty()) return hlsVideos
                 }
@@ -393,13 +414,14 @@ class Animeindo : Source() {
             for (mp4 in MP4_REGEX.findAll(unpacked)) {
                 val raw = mp4.groupValues[1]
                 if (raw.isNotBlank() && !raw.contains("placeholder")) {
-                    val resolved = resolveUrl(raw, embedUrl)
+                    val resolved = resolveUrl(raw, resolvedEmbedUrl)
                     val videoHeaders = headers.newBuilder()
-                        .set("User-Agent", USER_AGENT)
-                        .set("Referer", embedUrl)
+                        .set("Referer", resolvedEmbedUrl)
                         .build()
+                    val qualityMatch = Regex("""(\d{3,4}p)""").find(resolved)?.value
+                    val qualityLabel = if (qualityMatch != null) "$label - $qualityMatch" else label
                     return listOf(
-                        Video(resolved, label, resolved, videoHeaders, emptyList(), emptyList()),
+                        Video(resolved, qualityLabel, resolved, videoHeaders, emptyList(), emptyList()),
                     )
                 }
             }
