@@ -6,7 +6,7 @@
 ![Platform](https://img.shields.io/badge/platform-Aniyomi%20%7C%20Anikku-blueviolet?style=flat-square)
 ![License](https://img.shields.io/badge/license-Apache--2.0-blue?style=flat-square)
 
-Repositori ekstensi resmi **Dongnime** untuk aplikasi [Aniyomi](https://aniyomi.org) dan [Anikku](https://anikku-app.github.io/), menyediakan sumber streaming donghua, anime, dan animasi dengan takarir bahasa Indonesia (*Indonesian sub*).
+Repositori modular resmi **Dongnime** yang memuat modul ekstensi pengikis web (*source web parsers*) untuk aplikasi pemutar media Android seperti [Aniyomi](https://aniyomi.org) dan [Anikku](https://anikku-app.github.io/).
 
 ---
 
@@ -41,49 +41,54 @@ Salin salah satu tautan di bawah, lalu tambahkan di menu **Pengaturan Repositori
 
 ---
 
-## 📦 Daftar Ekstensi yang Tersedia
+## 📦 Katalog Ekstensi yang Tersedia
 
-| Icon | Nama Ekstensi | Bahasa | Rating | Versi | Sumber Website | Fitur Utama |
+| Icon | Nama Ekstensi | Bahasa | Kategori | Versi | Sumber Antarmuka | Deskripsi Teknis |
 | :---: | :--- | :---: | :---: | :---: | :--- | :--- |
-| <img src="https://raw.githubusercontent.com/dongnime/extensions/repo/icon/eu.kanade.tachiyomi.animeextension.id.anichin.png" width="36" height="36" alt="Anichin"> | **Anichin** | `id` | Remaja | `15.8` | [anichin.cafe](https://anichin.cafe) | Streaming donghua terpopuler, multi-mirror server, filter genre & status lengkap. |
-| <img src="https://raw.githubusercontent.com/dongnime/extensions/repo/icon/eu.kanade.tachiyomi.animeextension.id.animexin.png" width="36" height="36" alt="AnimeXin"> | **AnimeXin** | `id` | Remaja | `15.3` | [animexin.dev](https://animexin.dev) | Serial donghua & anime lengkap, Cloudflare bypass, multi-quality player. |
-| <img src="https://raw.githubusercontent.com/dongnime/extensions/repo/icon/eu.kanade.tachiyomi.animeextension.id.nekopoi.png" width="36" height="36" alt="Nekopoi"> | **Nekopoi** | `id` | 18+ | `15.3` | [nekopoi.care](https://nekopoi.care) | Streaming hentai & animasi dewasa berbahasa Indonesia, Doodstream & direct extractor. |
+| <img src="https://raw.githubusercontent.com/dongnime/extensions/repo/icon/eu.kanade.tachiyomi.animeextension.id.anichin.png" width="36" height="36" alt="Anichin"> | **Anichin** | `id` | Umum | `15.8` | [anichin.cafe](https://anichin.cafe) | Parser serial donghua, multi-server extractor, filter genre & status katalog. |
+| <img src="https://raw.githubusercontent.com/dongnime/extensions/repo/icon/eu.kanade.tachiyomi.animeextension.id.animexin.png" width="36" height="36" alt="AnimeXin"> | **AnimeXin** | `id` | Umum | `15.3` | [animexin.dev](https://animexin.dev) | Parser serial donghua & anime, Cloudflare bypass handler, multi-quality stream. |
+| <img src="https://raw.githubusercontent.com/dongnime/extensions/repo/icon/eu.kanade.tachiyomi.animeextension.id.nekopoi.png" width="36" height="36" alt="Nekopoi"> | **Nekopoi** | `id` | **18+ (NSFW)** | `15.3` | [nekopoi.care](https://nekopoi.care) | Parser animasi dewasa, Doodstream & direct video resolver. |
+
+> [!NOTE]
+> **Kontrol Orang Tua & Penyaringan Konten Dewasa (NSFW)**:  
+> Ekstensi yang ditandai **18+ (NSFW)** secara otomatis disaring oleh fitur bawaan aplikasi Aniyomi / Anikku. Anda dapat mengaktifkan atau menyembunyikan seluruh sumber dewasa kapan saja melalui menu **Settings → Browse → Show NSFW sources**.
 
 ---
 
-## ⚙️ Fitur Unggulan
+## ⚙️ Fitur Ekstensi
 
 - **Domain Dinamis (*Base URL Preference*)**:
-  Jika situs sumber terkena pemblokiran domain (*Internet Positif / TrustPositif*), Anda dapat mengganti alamat domain alternatif secara langsung melalui menu pengaturan masing-masing ekstensi tanpa harus menunggu rilis update baru.
+  Jika situs sumber melakukan pergantian domain atau domain utama tidak dapat diakses di jaringan lokal, pengguna dapat menyesuaikan URL domain baru secara mandiri melalui menu preferensi masing-masing ekstensi.
 - **Pilihan Resolusi Default**:
-  Dapat memilih preferensi kualitas pemutaran video (1080p, 720p, 480p, atau 360p) untuk menghemat kuota data seluler.
-- **Dukungan Multi-Extractor**:
-  Mendukung decoding video otomatis dari berbagai server hosting populer (Dailymotion, OK.ru, Doodstream, Morencius, AbyssPlayer, dsb).
+  Pengguna dapat menentukan prioritas kualitas pemutaran video (1080p, 720p, 480p, atau 360p) untuk mengoptimalkan penggunaan bandwidth.
+- **Dukungan Modular Extractor**:
+  Menggunakan parser modular untuk berbagai host pemutar video pihak ketiga (Dailymotion, OK.ru, Doodstream, Morencius, AbyssPlayer, dsb).
 
 ---
 
-## 📖 Panduan Langkah demi Langkah di Aplikasi
+## 📖 Panduan Penggunaan di Aplikasi
 
 1. Buka aplikasi **Aniyomi** atau **Anikku**.
 2. Masuk ke **More (Lainnya)** → **Settings (Pengaturan)** → **Browse (Jelajahi)**.
 3. Pilih **Anime extension repos**.
 4. Ketuk tombol **+ (Tambah)** di pojok kanan bawah.
-5. Tempel (*paste*) URL repositori Dongnime:
+5. Masukkan URL repositori Dongnime:
    `https://raw.githubusercontent.com/dongnime/extensions/repo/index.min.json`
-6. Tekan **Save / Simpan**, kemudian kembali ke tab **Extensions**.
+6. Simpan, lalu buka tab **Extensions**.
 7. Lakukan *pull-to-refresh* (tarik layar ke bawah) untuk memuat daftar ekstensi.
-8. Pilih ekstensi yang Anda inginkan dan tekan **Install**.
+8. Pilih ekstensi yang dibutuhkan dan tekan **Install**.
 
 ---
 
-## ⚠️ Disclaimer
+## ⚖️ Penafian Hukum & Merek Dagang (Disclaimer & Trademarks)
 
-1. Repositori ini **TIDAK menyimpan, menampung, atau mengunggah** berkas media, film, maupun video apa pun di server kami.
-2. Seluruh ekstensi yang ada di repositori ini berfungsi murni sebagai *web scraper* / perayap antarmuka yang mengindeks konten yang tersedia secara publik di internet.
-3. Proyek ini dikembangkan semata-mata untuk kepentingan edukasi dan penggunaan pribadi. Pengguna bertanggung jawab penuh atas penggunaan aplikasi dan konten yang diakses.
+1. **Bukan Penyedia Konten**: Repositori ini **TIDAK menyimpan, menampung, menyiarkan, atau mengunggah** berkas media, film, ataupun video apa pun di server kami.
+2. **Karakteristik Parser**: Seluruh modul ekstensi dalam repositori ini berfungsi murni sebagai alat perayap antarmuka (*client-side web scraper*) yang membaca data teks/HTML publik yang telah tersedia di internet, serupa dengan prinsip kerja peramban web (*web browser*).
+3. **Hak Milik Intelektual & Logo**: Seluruh nama produk, merek dagang, dan logo pihak ketiga yang dirujuk dalam repositori ini adalah milik dari masing-masing pemegang hak ciptanya. Penggunaan nama dan logo hanya bersifat *nominative fair use* untuk tujuan identifikasi visual dalam antarmuka aplikasi klien, tanpa menyiratkan afiliasi atau dukungan apa pun.
+4. **Kebijakan Hak Cipta**: Untuk prosedur permintaan penghapusan modul ekstensi secara kooperatif, silakan merujuk pada [DMCA & Takedown Policy](DMCA.md) kami.
 
 ---
 
 ## 📄 Lisensi
 
-Didistribusikan di bawah lisensi [Apache 2.0](LICENSE). Hak cipta masing-masing konten media tetap menjadi milik pembuat aslinya.
+Kode sumber repositori ini didistribusikan di bawah lisensi terbuka [Apache 2.0](LICENSE).
