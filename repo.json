@@ -3,6 +3,8 @@
     "name": "Dongnime Extensions",
     "shortName": "dongnime",
     "website": "https://github.com/dongnime/extensions",
-    "signingKeyFingerprint": "ddf8ebc14135646c7a8fa695d65aa3861f52b7756adca7692b47c62d113adf63"
+    "signingKeyFingerprint": "ddf8ebc14135646c7a8fa695d65aa3861f52b7756adca7692b47c62d113adf63",
+    "buildCommit": "910c8a0c263c9565b21099d8e041862235502642",
+    "buildTimestamp": "2026-09-06T13:02:59.787493+00:00"
   }
 }

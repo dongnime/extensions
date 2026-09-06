@@ -1,0 +1,3 @@
+bab6026b3f2a5196b823e54a73d960665df860cf1bcccacd10c55d62690770eb  aniyomi-id.anichin-v15.8.apk
+55b4b837d4cf72d5c3dc7462095878c1f347183d256174406b05839aa6ec5bf1  aniyomi-id.animexin-v15.3.apk
+842da59c1bf344db5a8394ec11f0343df9dbe745a0aaf8e09648132f971ec51a  aniyomi-id.nekopoi-v15.3.apk
