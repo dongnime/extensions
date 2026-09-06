@@ -49,7 +49,7 @@ body:
     id: additional_info
     attributes:
       label: Catatan Tambahan
-      description: Tuliskan informasi lain yang berguna (misal: jenis video player yang digunakan, apakah butuh login/tidak, dsb)
+      description: "Tuliskan informasi lain yang berguna (misal: jenis video player yang digunakan, apakah butuh login/tidak, dsb)"
       placeholder: "Website menggunakan pemutar video Dailymotion dan direktori videonya update setiap hari..."
     validations:
       required: false
