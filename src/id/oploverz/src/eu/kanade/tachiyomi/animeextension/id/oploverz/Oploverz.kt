@@ -195,17 +195,22 @@ class Oploverz : Source() {
         val videos = mutableListOf<Video>()
         val seenUrls = mutableSetOf<String>()
 
-        // 1. Check select.mirror option elements (base64 encoded iframes)
+        // 1. Check select.mirror option elements (base64 encoded iframes or direct URLs)
         val mirrorOptions = doc.select("select.mirror option")
         mirrorOptions.forEachIndexed { index, option ->
             val base64Value = option.attr("value").trim()
             if (base64Value.isBlank()) return@forEachIndexed
 
-            val decodedHtml = runCatching {
-                String(Base64.decode(base64Value, Base64.DEFAULT))
-            }.getOrNull() ?: return@forEachIndexed
+            val htmlToParse = if (base64Value.contains("<iframe") || base64Value.startsWith("http")) {
+                base64Value
+            } else {
+                runCatching {
+                    String(Base64.decode(base64Value, Base64.DEFAULT))
+                }.getOrNull() ?: base64Value
+            }
 
-            val rawSrc = Jsoup.parse(decodedHtml).selectFirst("iframe")?.attr("src")?.trim()
+            val rawSrc = Jsoup.parse(htmlToParse).selectFirst("iframe")?.attr("src")?.trim()
+                ?: (if (htmlToParse.startsWith("http")) htmlToParse.trim() else null)
                 ?: return@forEachIndexed
             val iframeSrc = resolveUrl(rawSrc, baseUrl)
             if (iframeSrc in seenUrls) return@forEachIndexed
@@ -218,7 +223,7 @@ class Oploverz : Source() {
         }
 
         // 2. Check direct iframes on the page
-        val directIframes = doc.select(".video-content iframe, .megavid iframe, .player-embed iframe, iframe")
+        val directIframes = doc.select(".video-content iframe, .megavid iframe, .player-embed iframe, #pembed iframe, iframe")
         directIframes.forEachIndexed { index, iframe ->
             val rawSrc = iframe.attr("src").ifBlank { iframe.attr("data-src") }.trim()
             if (rawSrc.isBlank()) return@forEachIndexed
