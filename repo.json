@@ -4,7 +4,9 @@
     "shortName": "dongnime",
     "website": "https://github.com/dongnime/extensions",
     "signingKeyFingerprint": "ddf8ebc14135646c7a8fa695d65aa3861f52b7756adca7692b47c62d113adf63",
-    "buildCommit": "4f206f59f9def9fc3d6e22c3c85b5b8a862f3817",
-    "buildTimestamp": "2026-09-06T13:12:18.067444+00:00"
+    "buildCommit": "414d0c434977ece0a6b6ae381f8500ff81464fd2",
+    "buildTimestamp": "2026-09-06T13:36:23.830031+00:00",
+    "buildWorkflowRunId": "34036455051",
+    "buildWorkflowRunUrl": "https://github.com/dongnime/extensions/actions/runs/34036455051"
   }
 }

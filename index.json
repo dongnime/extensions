@@ -7,7 +7,7 @@
     "code": 8,
     "version": "15.8",
     "nsfw": 0,
-    "sha256": "ae773151efda9056d7bba70f15869cb91ec39e0c93309ae00c253b33a9d4dd5e",
+    "sha256": "666df6389684f7ce8e1a69ee3965974449149bf5274cfadd1ee319da19788c2b",
     "sources": [
       {
         "name": "Anichin",
@@ -25,7 +25,7 @@
     "code": 3,
     "version": "15.3",
     "nsfw": 0,
-    "sha256": "8b2899fb61fde2ab79504ba162ffa4ae2265d463ef4a72f94ab8ae54edaa6f38",
+    "sha256": "e22b3a91f31bcdd057b2ebdf4aaeb0eabf105bd904bb1971638281a38594ac4b",
     "sources": [
       {
         "name": "AnimeXin",
@@ -43,7 +43,7 @@
     "code": 3,
     "version": "15.3",
     "nsfw": 1,
-    "sha256": "6d50249965387a804371f15e50f19149be6aff26bdb827f5ca1bd6faf35f1ccf",
+    "sha256": "d75a0b150aa56ab72fc4e23d2a8695f95311475873010453000b6db3ec00c009",
     "sources": [
       {
         "name": "Nekopoi",
