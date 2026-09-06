@@ -72,14 +72,17 @@ class Nekopoi : Source() {
                     if (page > 1) addQueryParameter("paged", page.toString())
                 }.build().toString()
             }
+
             categoryFilter != null && categoryFilter.selected().isNotBlank() -> {
                 val cat = categoryFilter.selected()
                 if (page == 1) "$baseUrl/category/$cat/" else "$baseUrl/category/$cat/page/$page/"
             }
+
             genreFilter != null && genreFilter.selected().isNotBlank() -> {
                 val genre = genreFilter.selected()
                 if (page == 1) "$baseUrl/genres/$genre/" else "$baseUrl/genres/$genre/page/$page/"
             }
+
             else -> {
                 if (page == 1) "$baseUrl/category/hentai/" else "$baseUrl/category/hentai/page/$page/"
             }
@@ -196,9 +199,11 @@ class Nekopoi : Source() {
                 "playmogo.com" in src || "dood" in src -> {
                     extractPlaymogo(src)?.let { videos.add(it) }
                 }
+
                 "streampoi.com" in src || "streamruby" in src -> {
                     videos.addAll(extractStreampoi(src))
                 }
+
                 else -> {
                     videos.addAll(extractGenericEmbed(src, "Server"))
                 }
@@ -380,9 +385,7 @@ class Nekopoi : Source() {
         return "/hentai/$seriesSlug/"
     }
 
-    private fun extractBgUrl(style: String): String? {
-        return BG_URL_REGEX.find(style)?.groupValues?.get(1)
-    }
+    private fun extractBgUrl(style: String): String? = BG_URL_REGEX.find(style)?.groupValues?.get(1)
 
     private fun createRandomString(length: Int = 10): String {
         val chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
@@ -410,17 +413,19 @@ class Nekopoi : Source() {
 
     // ============================== Filter Classes ==============================
 
-    private class CategoryFilter : AnimeFilter.Select<String>(
-        "Kategori",
-        CATEGORIES.map { it.first }.toTypedArray(),
-    ) {
+    private class CategoryFilter :
+        AnimeFilter.Select<String>(
+            "Kategori",
+            CATEGORIES.map { it.first }.toTypedArray(),
+        ) {
         fun selected() = CATEGORIES[state].second
     }
 
-    private class GenreFilter : AnimeFilter.Select<String>(
-        "Genre",
-        GENRES.map { it.first }.toTypedArray(),
-    ) {
+    private class GenreFilter :
+        AnimeFilter.Select<String>(
+            "Genre",
+            GENRES.map { it.first }.toTypedArray(),
+        ) {
         fun selected() = GENRES[state].second
     }
 

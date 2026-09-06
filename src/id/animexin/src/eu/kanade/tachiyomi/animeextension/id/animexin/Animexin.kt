@@ -90,10 +90,12 @@ class Animexin : Source() {
                     if (page > 1) addQueryParameter("page", page.toString())
                 }.build().toString()
             }
+
             genreFilter != null && genreFilter.selected().isNotBlank() -> {
                 val base = "$baseUrl/genres/${genreFilter.selected()}/"
                 if (page == 1) base else "${base}page/$page/"
             }
+
             else -> {
                 "$baseUrl/".toHttpUrl().newBuilder().apply {
                     addQueryParameter("post_type", "anime")
@@ -307,19 +309,21 @@ class Animexin : Source() {
         return videos.distinctBy { it.videoUrl }.sortVideos()
     }
 
-    private fun extractFromUrl(url: String, label: String): List<Video> {
-        return runCatching {
-            when {
-                "ok.ru" in url -> okruExtractor.videosFromUrl(url, prefix = "$label - ")
-                "dailymotion.com" in url -> dailymotionExtractor.videosFromUrl(url, prefix = "$label - ")
-                "playmogo.com" in url || "dood" in url || "ds2play" in url -> {
-                    doodExtractor.videoFromUrl(url, prefix = "$label - ")?.let { listOf(it) } ?: emptyList()
-                }
-                "mediafire.com" in url -> extractMediafire(url, label)?.let { listOf(it) } ?: emptyList()
-                else -> extractGenericEmbed(url, label)
+    private fun extractFromUrl(url: String, label: String): List<Video> = runCatching {
+        when {
+            "ok.ru" in url -> okruExtractor.videosFromUrl(url, prefix = "$label - ")
+
+            "dailymotion.com" in url -> dailymotionExtractor.videosFromUrl(url, prefix = "$label - ")
+
+            "playmogo.com" in url || "dood" in url || "ds2play" in url -> {
+                doodExtractor.videoFromUrl(url, prefix = "$label - ")?.let { listOf(it) } ?: emptyList()
             }
-        }.getOrDefault(emptyList())
-    }
+
+            "mediafire.com" in url -> extractMediafire(url, label)?.let { listOf(it) } ?: emptyList()
+
+            else -> extractGenericEmbed(url, label)
+        }
+    }.getOrDefault(emptyList())
 
     private fun extractMediafire(url: String, quality: String): Video? {
         return runCatching {
@@ -397,11 +401,14 @@ class Animexin : Source() {
         val clean = rawUrl.trim()
         return when {
             clean.startsWith("http://") || clean.startsWith("https://") -> clean
+
             clean.startsWith("//") -> "https:$clean"
+
             clean.startsWith("/") -> {
                 val httpUrl = baseUrl.toHttpUrl()
                 "${httpUrl.scheme}://${httpUrl.host}$clean"
             }
+
             else -> {
                 val base = baseUrl.substringBefore("?")
                 "${base.substringBeforeLast('/')}/$clean"

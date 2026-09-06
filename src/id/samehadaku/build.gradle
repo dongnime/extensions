@@ -1,0 +1,13 @@
+ext {
+    extName = 'Samehadaku'
+    extClass = '.Samehadaku'
+    extVersionCode = 1
+}
+
+apply from: "$rootDir/common.gradle"
+
+dependencies {
+    implementation(project(":lib:blogger-extractor"))
+    implementation(project(":lib:playlist-utils"))
+    implementation(project(":lib:unpacker"))
+}
