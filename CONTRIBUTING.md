@@ -62,9 +62,17 @@ Terima kasih atas minat Anda untuk berkontribusi pada repositori **Dongnime Exte
    - `res/mipmap-xxxhdpi/` (192x192)
 4. Daftarkan dependensi library extractor yang dibutuhkan di `build.gradle`.
 5. Implementasikan class ekstensi turunan dari `AnimeHttpSource()`.
-6. Selalu tambahkan pengaturan **Base URL Preference** agar pengguna dapat mengganti domain jika diblokir oleh ISP.
+6. Selalu tambahkan pengaturan **Base URL Preference** agar pengguna dapat menyesuaikan domain jika situs sumber melakukan pergantian alamat (*domain migration*) atau domain utama tidak dapat diakses di jaringan lokal pengguna.
 
 ---
+
+## 🔒 Kebijakan Keamanan untuk Kontributor (Security & Safety Rules)
+
+Demi menjaga integritas rantai pasok (*supply-chain security*) dan kepatuhan hukum:
+1. **Dilarang Menyertakan Rahasia**: Jangan pernah menyertakan API key privat, token akses, kata sandi, ataupun berkas *keystore / signing key* di dalam kode sumber, commit, maupun komentar.
+2. **Hanya Akses Publik**: Modul ekstensi hanya diperkenankan mengurai antarmuka HTML/JSON yang tersedia secara publik di internet.
+3. **Dilarang Membobol Akses Kontrol**: Dilarang menambahkan logika untuk pembobolan DRM komersial, *paywall bypass*, pencurian *session / cookie*, atau *credential harvesting*.
+4. **Integritas Dependensi**: Gunakan pustaka modul bersama dari folder `lib/` atau repositori dependensi tepercaya. Dilarang memasukkan binary JAR/AAR eksternal yang tidak dapat diaudit sumbernya.
 
 ## 🔀 Alur Pengajuan Pull Request (PR)
 

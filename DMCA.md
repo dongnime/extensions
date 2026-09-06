@@ -26,7 +26,7 @@ Please submit a written notification containing:
 5. **Accuracy Statement**: A statement that the information in the notification is accurate, made under penalty of perjury.
 
 ### Submission Channel:
-- **Via GitHub Issue Tracker**: Open a formal issue titled `[DMCA/Takedown] <Extension Name>` on our [Issue Tracker](https://github.com/dongnime/extensions/issues).
+- **Via GitHub Issue Tracker**: Submit a formal request using our structured [DMCA Takedown Request Form](https://github.com/dongnime/extensions/issues/new?template=dmca_takedown.yml).
 
 ---
 

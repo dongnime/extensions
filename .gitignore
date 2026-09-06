@@ -16,3 +16,8 @@ __pycache__/
 *.pyc
 scratch/
 /scripts/
+
+# Keystore and signing keys
+*.jks
+*.keystore
+signingkey.jks

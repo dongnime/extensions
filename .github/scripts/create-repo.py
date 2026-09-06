@@ -1,10 +1,20 @@
+import hashlib
 import json
 import os
 import re
 import shutil
 import subprocess
+from datetime import datetime, timezone
 from pathlib import Path
 from zipfile import ZipFile
+
+
+def calculate_sha256(file_path: Path) -> str:
+    hasher = hashlib.sha256()
+    with file_path.open("rb") as f:
+        for chunk in iter(lambda: f.read(65536), b""):
+            hasher.update(chunk)
+    return hasher.hexdigest()
 
 PACKAGE_NAME_REGEX = re.compile(r"package: name='([^']+)'")
 VERSION_CODE_REGEX = re.compile(r"versionCode='([^']+)'")
@@ -103,6 +113,8 @@ if REPO_APK_DIR.is_dir():
         nsfw_match = IS_NSFW_REGEX.search(badging)
         is_nsfw = int(nsfw_match[1]) if nsfw_match else 0
 
+        apk_sha256 = calculate_sha256(apk)
+
         common_data = {
             "name": app_name,
             "pkg": package_name,
@@ -111,6 +123,7 @@ if REPO_APK_DIR.is_dir():
             "code": version_code,
             "version": version_name,
             "nsfw": is_nsfw,
+            "sha256": apk_sha256,
         }
         min_data = {
             **common_data,
@@ -135,12 +148,24 @@ with REPO_DIR.joinpath("index.min.json").open("w", encoding="utf-8") as index_fi
 with REPO_DIR.joinpath("index.json").open("w", encoding="utf-8") as index_file:
     json.dump(index_min_data, index_file, ensure_ascii=False, indent=2)
 
+sha256_lines = [f"{item['sha256']}  {item['apk']}\n" for item in index_min_data]
+with REPO_APK_DIR.joinpath("sha256sums.txt").open("w", encoding="utf-8") as sums_file:
+    sums_file.writelines(sha256_lines)
+
+with REPO_DIR.joinpath("sha256sums.txt").open("w", encoding="utf-8") as sums_file:
+    sums_file.writelines(sha256_lines)
+
+commit_sha = os.environ.get("GITHUB_SHA") or ""
+build_time = datetime.now(timezone.utc).isoformat()
+
 repo_meta = {
     "meta": {
         "name": "Dongnime Extensions",
         "shortName": "dongnime",
         "website": "https://github.com/dongnime/extensions",
         "signingKeyFingerprint": "ddf8ebc14135646c7a8fa695d65aa3861f52b7756adca7692b47c62d113adf63",
+        "buildCommit": commit_sha,
+        "buildTimestamp": build_time,
     }
 }
 with REPO_DIR.joinpath("repo.json").open("w", encoding="utf-8") as repo_file:

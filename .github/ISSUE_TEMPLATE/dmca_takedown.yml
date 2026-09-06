@@ -1,0 +1,65 @@
+name: ⚖️ DMCA Takedown Request
+description: Submit a formal copyright or DMCA takedown notification
+title: "[DMCA/Takedown]: <Extension Name>"
+labels: ["dmca", "takedown"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please use this form if you are a copyright owner or authorized representative requesting the removal of a specific extension scraper module pursuant to 17 U.S.C. § 512.
+        
+        Our team reviews all valid requests and aims to respond within 24–48 hours.
+
+  - type: input
+    id: extension_name
+    attributes:
+      label: Target Extension Name
+      description: The name of the extension module (e.g., Anichin, AnimeXin, Nekopoi).
+      placeholder: "e.g. Anichin"
+    validations:
+      required: true
+
+  - type: input
+    id: target_url
+    attributes:
+      label: Target Website URL
+      description: The domain / website URL indexed by the extension.
+      placeholder: "https://example.com"
+    validations:
+      required: true
+
+  - type: input
+    id: copyright_holder
+    attributes:
+      label: Copyright Holder / Authorized Agent Name
+      description: Your name and organization/company.
+      placeholder: "Full Legal Name / Entity"
+    validations:
+      required: true
+
+  - type: input
+    id: contact_email
+    attributes:
+      label: Official Contact Email
+      description: Email address for official communications regarding this request.
+      placeholder: "legal@copyright-holder.com"
+    validations:
+      required: true
+
+  - type: textarea
+    id: details
+    attributes:
+      label: Description of Claimed Infringement
+      description: Provide details of the copyrighted works and the specific nature of the unauthorized scraping or interface indexing.
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: legal_affirmations
+    attributes:
+      label: Legal Statements
+      options:
+        - label: I have a good faith belief that the scraping or indexing of the website interface described above is not authorized by the copyright owner, its agent, or the law.
+          required: true
+        - label: The information in this notification is accurate, and under penalty of perjury, I am the owner or authorized to act on behalf of the owner of an exclusive right that is allegedly infringed.
+          required: true
