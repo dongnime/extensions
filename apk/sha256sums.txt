@@ -1,3 +1,4 @@
-718249eb9dafbd3bd9107730c8b667c9649bdcb171c09f3a731c17042214d094  aniyomi-id.anichin-v15.8.apk
-6f6abc5a061b7ca0814ec335f581a7bb87440a2c3e31776dc13936c30c2543d9  aniyomi-id.animexin-v15.3.apk
-095df3fa1b1937c40ef936b11cb288ede1c8f750363742727e79916ae26bc4f7  aniyomi-id.nekopoi-v15.3.apk
+ada31146d4ab21193759ed71281d2667851e0f40a5c956bdcd1dc2825f083d60  aniyomi-id.anichin-v15.8.apk
+606a6cc6e1d92c3604920cfa6f46ff291fe5abaa7e4f93f2663dbf482da2b7fc  aniyomi-id.animexin-v15.3.apk
+83ae27ba8688f30bfa54edb2460b928310969f857ca763f8c279165f0efd0f63  aniyomi-id.nekopoi-v15.3.apk
+2723ea48f76f54f01fdc24a0d9d492d5764fe3f945981add87e567cf113dcead  aniyomi-id.samehadaku-v15.1.apk
