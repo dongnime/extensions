@@ -79,7 +79,7 @@ class BloggerExtractor(private val client: OkHttpClient) {
             .toString()
 
         val rpcBody = FormBody.Builder()
-            .add("f.req", """[[["WcwnYd","[\"$token\",\"",0]",null,"generic"]]]""")
+            .add("f.req", """[[["WcwnYd","[\"$token\",\"\",0]",null,"generic"]]]""")
             .build()
         val rpcHeaders = Headers.headersOf(
             "accept", "*/*",
