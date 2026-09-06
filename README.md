@@ -46,7 +46,7 @@ Salin salah satu tautan di bawah, lalu tambahkan di menu **Pengaturan Repositori
 | Icon | Nama Ekstensi | Bahasa | Kategori | Versi | Sumber Antarmuka | Deskripsi Teknis |
 | :---: | :--- | :---: | :---: | :---: | :--- | :--- |
 | <img src="https://raw.githubusercontent.com/dongnime/extensions/repo/icon/eu.kanade.tachiyomi.animeextension.id.anichin.png" width="36" height="36" alt="Anichin"> | **Anichin** | `id` | Umum | `15.8` | [anichin.cafe](https://anichin.cafe) | Parser serial donghua, multi-server extractor, filter genre & status katalog. |
-| <img src="https://raw.githubusercontent.com/dongnime/extensions/repo/icon/eu.kanade.tachiyomi.animeextension.id.animexin.png" width="36" height="36" alt="AnimeXin"> | **AnimeXin** | `id` | Umum | `15.3` | [animexin.dev](https://animexin.dev) | Parser serial donghua & anime, Cloudflare bypass handler, multi-quality stream. |
+| <img src="https://raw.githubusercontent.com/dongnime/extensions/repo/icon/eu.kanade.tachiyomi.animeextension.id.animexin.png" width="36" height="36" alt="AnimeXin"> | **AnimeXin** | `id` | Umum | `15.3` | [animexin.dev](https://animexin.dev) | Parser serial donghua & anime, multi-server video resolver, multi-quality stream. |
 | <img src="https://raw.githubusercontent.com/dongnime/extensions/repo/icon/eu.kanade.tachiyomi.animeextension.id.nekopoi.png" width="36" height="36" alt="Nekopoi"> | **Nekopoi** | `id` | **18+ (NSFW)** | `15.3` | [nekopoi.care](https://nekopoi.care) | Parser animasi dewasa, Doodstream & direct video resolver. |
 
 > [!NOTE]
