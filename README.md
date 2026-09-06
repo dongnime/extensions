@@ -21,12 +21,20 @@ An extension repository for [Aniyomi](https://aniyomi.org) and [Anikku](https://
 
 ## 🚀 How to Add the Repository
 
-### 1. One-Click Install (Mobile Browser)
+### 1. One-Click Install (Android)
 
 Tap one of the buttons below from your Android device:
 
-- **[👉 Add to Aniyomi](aniyomi://add-repo?url=https://raw.githubusercontent.com/dongnime/extensions/repo/index.min.json)**
-- **[👉 Add to Anikku](anikku://add-repo?url=https://raw.githubusercontent.com/dongnime/extensions/repo/index.min.json)**
+[![Add to Aniyomi](https://img.shields.io/badge/Aniyomi-Add%20Repository-007ACC?style=for-the-badge&logo=android&logoColor=white)](https://dongnime.github.io/add-repo?app=aniyomi)
+[![Add to Anikku](https://img.shields.io/badge/Anikku-Add%20Repository-7C3AED?style=for-the-badge&logo=android&logoColor=white)](https://dongnime.github.io/add-repo?app=anikku)
+
+> [!TIP]
+> **Direct One-Click Links:**
+> - 📲 **[Add to Aniyomi](https://dongnime.github.io/add-repo?app=aniyomi)**
+> - 📲 **[Add to Anikku](https://dongnime.github.io/add-repo?app=anikku)**
+>
+> *(Memerlukan aplikasi Aniyomi atau Anikku terpasang di perangkat Android Anda)*
+
 
 ### 2. Manual Setup
 
