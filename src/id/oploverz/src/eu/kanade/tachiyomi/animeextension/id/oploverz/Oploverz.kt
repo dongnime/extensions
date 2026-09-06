@@ -293,7 +293,7 @@ class Oploverz : Source() {
         if (videos.isEmpty()) {
             DIRECT_MP4_REGEX.find(body)?.groupValues?.get(1)?.let { mp4 ->
                 val resolved = resolveUrl(mp4, embedUrl)
-                videos.add(Video(resolved, "$label - Direct MP4", resolved, headers))
+                videos.add(Video(resolved, "$label - Direct MP4", resolved, headers, emptyList(), emptyList()))
             }
         }
 

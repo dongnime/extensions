@@ -7,10 +7,10 @@ import eu.kanade.tachiyomi.network.GET
 import eu.kanade.tachiyomi.network.POST
 import eu.kanade.tachiyomi.network.awaitSuccess
 import keiyoushi.utils.bodyString
+import okhttp3.FormBody
 import okhttp3.Headers
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
-import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONArray
 
 class BloggerExtractor(private val client: OkHttpClient) {
@@ -48,12 +48,7 @@ class BloggerExtractor(private val client: OkHttpClient) {
                 val format = it.substringAfter("\"format_id\":").substringBefore('}')
                 val quality = qualityFromFormat(format)
                 val label = if (prefix.isNotBlank()) "$prefix - $quality" else "Blogger - $quality"
-                Video(videoUrl, label.trim(), videoUrl, bloggerHeaders).copy(
-                    mpvArgs = listOf(
-                        Pair("user-agent", BLOGGER_USER_AGENT),
-                        Pair("referrer", BLOGGER_BASE),
-                    ),
-                )
+                Video(videoUrl, label.trim(), videoUrl, bloggerHeaders, emptyList(), emptyList())
             }
     }
 
@@ -83,12 +78,12 @@ class BloggerExtractor(private val client: OkHttpClient) {
             .build()
             .toString()
 
-        val rpcBody =
-            "f.req=%5B%5B%5B%22WcwnYd%22%2C%22%5B%5C%22$token%5C%22%2C%5C%22%5C%22%2C0%5D%22%2Cnull%2C%22generic%22%5D%5D%5D&".toRequestBody()
+        val rpcBody = FormBody.Builder()
+            .add("f.req", """[[["WcwnYd","[\"$token\",\"",0]",null,"generic"]]]""")
+            .build()
         val rpcHeaders = Headers.headersOf(
             "accept", "*/*",
             "accept-language", "en-US,en;q=0.9",
-            "content-type", "application/x-www-form-urlencoded;charset=UTF-8",
             "priority", "u=1, i",
             "sec-fetch-dest", "empty",
             "sec-fetch-mode", "cors",
@@ -134,12 +129,7 @@ class BloggerExtractor(private val client: OkHttpClient) {
                                 val quality = qualityFromFormat(format)
                                 val label = if (prefix.isNotBlank()) "$prefix - $quality" else "Blogger - $quality"
                                 videos.add(
-                                    Video(videoUrl, label.trim(), videoUrl, bloggerHeaders).copy(
-                                        mpvArgs = listOf(
-                                            Pair("user-agent", BLOGGER_USER_AGENT),
-                                            Pair("referrer", BLOGGER_BASE),
-                                        ),
-                                    ),
+                                    Video(videoUrl, label.trim(), videoUrl, bloggerHeaders, emptyList(), emptyList()),
                                 )
                             }
                         }
@@ -169,12 +159,7 @@ class BloggerExtractor(private val client: OkHttpClient) {
                 val quality = qualityFromFormat(format)
                 val label = if (prefix.isNotBlank()) "$prefix - $quality" else "Blogger - $quality"
                 videos.add(
-                    Video(videoUrl, label.trim(), videoUrl, bloggerHeaders).copy(
-                        mpvArgs = listOf(
-                            Pair("user-agent", BLOGGER_USER_AGENT),
-                            Pair("referrer", BLOGGER_BASE),
-                        ),
-                    ),
+                    Video(videoUrl, label.trim(), videoUrl, bloggerHeaders, emptyList(), emptyList()),
                 )
             }
         }
