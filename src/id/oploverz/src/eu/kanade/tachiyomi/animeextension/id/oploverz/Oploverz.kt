@@ -362,7 +362,7 @@ class Oploverz : Source() {
         private const val PREF_QUALITY_DEFAULT = "720p"
 
         private const val USER_AGENT =
-            "Mozilla/5.0 (Linux; Android 14; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36"
 
         private val DIRECT_M3U8_REGEX = Regex("""(?:"|')(https?://[^"']+\.m3u8[^"']*)(?:"|')""")
         private val DIRECT_MP4_REGEX = Regex("""(?:"|')(https?://[^"']+\.mp4[^"']*)(?:"|')""")

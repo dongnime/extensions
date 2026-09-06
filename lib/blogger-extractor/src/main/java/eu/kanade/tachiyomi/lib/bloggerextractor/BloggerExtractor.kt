@@ -27,6 +27,11 @@ class BloggerExtractor(private val client: OkHttpClient) {
     private fun getStreamVideos(body: String, headers: Headers, prefix: String = ""): List<Video> {
         if (body.contains("errorContainer")) return emptyList()
 
+        val bloggerHeaders = headers.newBuilder()
+            .set("User-Agent", BLOGGER_USER_AGENT)
+            .set("Referer", BLOGGER_BASE)
+            .build()
+
         return body
             .substringAfter("\"streams\":[", "")
             .substringBefore("]")
@@ -38,7 +43,12 @@ class BloggerExtractor(private val client: OkHttpClient) {
                 val format = it.substringAfter("\"format_id\":").substringBefore('}')
                 val quality = qualityFromFormat(format)
                 val label = if (prefix.isNotBlank()) "$prefix - $quality" else "Blogger - $quality"
-                Video(videoUrl, label.trim(), videoUrl, headers)
+                Video(videoUrl, label.trim(), videoUrl, bloggerHeaders).copy(
+                    mpvArgs = listOf(
+                        Pair("user-agent", BLOGGER_USER_AGENT),
+                        Pair("referrer", BLOGGER_BASE),
+                    ),
+                )
             }
     }
 
@@ -76,7 +86,7 @@ class BloggerExtractor(private val client: OkHttpClient) {
             "sec-fetch-dest", "empty",
             "sec-fetch-mode", "cors",
             "sec-fetch-site", "same-origin",
-            "User-Agent", headers["User-Agent"] ?: "",
+            "User-Agent", BLOGGER_USER_AGENT,
             "x-same-domain", "1",
             "Referer", BLOGGER_BASE,
         )
@@ -87,6 +97,11 @@ class BloggerExtractor(private val client: OkHttpClient) {
         }.getOrNull() ?: return emptyList()
 
         if (!rpcString.contains("https://")) return emptyList()
+
+        val bloggerHeaders = headers.newBuilder()
+            .set("User-Agent", BLOGGER_USER_AGENT)
+            .set("Referer", BLOGGER_BASE)
+            .build()
 
         return rpcString
             .substringAfter("[[\\\"", "")
@@ -103,7 +118,12 @@ class BloggerExtractor(private val client: OkHttpClient) {
                 val format = it.substringAfter("[").substringBefore("]")
                 val quality = qualityFromFormat(format)
                 val label = if (prefix.isNotBlank()) "$prefix - $quality" else "Blogger - $quality"
-                Video(videoUrl, label.trim(), videoUrl, headers)
+                Video(videoUrl, label.trim(), videoUrl, bloggerHeaders).copy(
+                    mpvArgs = listOf(
+                        Pair("user-agent", BLOGGER_USER_AGENT),
+                        Pair("referrer", BLOGGER_BASE),
+                    ),
+                )
             }
     }
 
@@ -121,6 +141,8 @@ class BloggerExtractor(private val client: OkHttpClient) {
     }
 
     companion object {
+        const val BLOGGER_USER_AGENT =
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36"
         private const val BLOGGER_BASE = "https://www.blogger.com/"
     }
 }
