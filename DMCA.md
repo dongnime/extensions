@@ -8,7 +8,7 @@ The **Dongnime** project complies with 17 U.S.C. § 512 and the Digital Millenni
 
 1. **Tool, Not a Content Host**: Dongnime is an open-source project providing modular source extensions for compatible Android media reader/player applications (such as Aniyomi and Anikku).
 2. **No Media Stored**: Neither this repository, its maintainers, nor its infrastructure host, stream, store, cache, or transmit any video files, media streams, images, or copyrighted material.
-3. **Public Parser**: The extensions provided herein function strictly as specialized HTTP clients that parse publicly accessible HTML/DOM documents and JSON APIs on the third-party websites they interface with, similar in nature to a standard web browser.
+3. **Public Parser & Resolver**: The extensions provided herein function as specialized HTTP clients and resolvers that interface with publicly accessible web endpoints, HTML/DOM documents, and public APIs on third-party websites, similar in nature to a standard web browser.
 4. **Independent Operation**: Dongnime is not affiliated with, endorsed by, or associated with any of the third-party websites or content providers indexed by its extensions.
 
 ---

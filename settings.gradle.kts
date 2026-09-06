@@ -6,7 +6,12 @@ pluginManagement {
         google()
         mavenCentral()
         gradlePluginPortal()
-        maven(url = "https://www.jitpack.io")
+        maven(url = "https://www.jitpack.io") {
+            content {
+                includeGroup("com.github.null2264.injekt")
+                includeGroup("com.github.aniyomiorg")
+            }
+        }
     }
 }
 
@@ -22,7 +27,12 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        maven(url = "https://www.jitpack.io")
+        maven(url = "https://www.jitpack.io") {
+            content {
+                includeGroup("com.github.null2264.injekt")
+                includeGroup("com.github.aniyomiorg")
+            }
+        }
     }
 }
 

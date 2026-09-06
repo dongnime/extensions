@@ -156,6 +156,10 @@ with REPO_DIR.joinpath("sha256sums.txt").open("w", encoding="utf-8") as sums_fil
     sums_file.writelines(sha256_lines)
 
 commit_sha = os.environ.get("GITHUB_SHA") or ""
+run_id = os.environ.get("GITHUB_RUN_ID") or ""
+server_url = os.environ.get("GITHUB_SERVER_URL") or ""
+repository = os.environ.get("GITHUB_REPOSITORY") or ""
+run_url = f"{server_url}/{repository}/actions/runs/{run_id}" if run_id and server_url and repository else ""
 build_time = datetime.now(timezone.utc).isoformat()
 
 repo_meta = {
@@ -166,6 +170,8 @@ repo_meta = {
         "signingKeyFingerprint": "ddf8ebc14135646c7a8fa695d65aa3861f52b7756adca7692b47c62d113adf63",
         "buildCommit": commit_sha,
         "buildTimestamp": build_time,
+        "buildWorkflowRunId": run_id,
+        "buildWorkflowRunUrl": run_url,
     }
 }
 with REPO_DIR.joinpath("repo.json").open("w", encoding="utf-8") as repo_file:

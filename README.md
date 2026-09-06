@@ -67,7 +67,7 @@ Contributions are welcome! Please check our [CONTRIBUTING.md](CONTRIBUTING.md) t
 
 ## ⚖️ Disclaimer & DMCA
 
-- This repository does **not** host, store, or stream any media files. All extensions strictly function as client-side HTTP parsers for publicly available websites.
+- This repository does **not** host, store, or stream any media files. Extensions in this repository function as client-side source parsers and media stream resolvers for third-party public websites.
 - This project is not affiliated with Aniyomi, Anikku, or any of the third-party websites indexed. All product names, logos, and trademarks belong to their respective owners.
 - For copyright takedown requests, please refer to our [DMCA Policy](DMCA.md).
 - For security vulnerability disclosures, please refer to our [Security Policy](SECURITY.md).
