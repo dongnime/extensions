@@ -3,7 +3,7 @@
 # Aniyomi / Anikku Extensions
 
 [![Build and Publish](https://github.com/dongnime/extensions/actions/workflows/build.yml/badge.svg)](https://github.com/dongnime/extensions/actions/workflows/build.yml)
-[![Extensions](https://img.shields.io/badge/extensions-3%20available-brightgreen?style=flat)](https://raw.githubusercontent.com/dongnime/extensions/repo/index.min.json)
+[![Extensions](https://img.shields.io/badge/extensions-listing-brightgreen?style=flat)](https://dongnime.github.io/extensions/)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue?style=flat)](LICENSE)
 
 An extension repository for [Aniyomi](https://aniyomi.org) and [Anikku](https://anikku-app.github.io/) featuring Indonesian-subbed donghua, anime, and animation sources.
@@ -43,19 +43,6 @@ Copy and paste the following repository URL into **Settings → Browse → Anime
 ```
 https://raw.githubusercontent.com/dongnime/extensions/repo/index.min.json
 ```
-
----
-
-## 📦 Available Extensions
-
-| Name | Lang | Category | Version | Source Website | Description |
-| :--- | :---: | :---: | :---: | :--- | :--- |
-| **Anichin** | `id` | SFW | `15.8` | [anichin.cafe](https://anichin.cafe) | Donghua series parser & multi-server resolver |
-| **AnimeXin** | `id` | SFW | `15.3` | [animexin.dev](https://animexin.dev) | Donghua & anime series parser with multi-quality streams |
-| **Nekopoi** | `id` | 18+ (NSFW) | `15.3` | [nekopoi.care](https://nekopoi.care) | Adult animation parser & video resolver |
-
-> [!NOTE]
-> Extensions labeled **18+ (NSFW)** are filtered by default in Aniyomi/Anikku. You can toggle adult sources in **Settings → Browse → Show NSFW sources**.
 
 ---
 
