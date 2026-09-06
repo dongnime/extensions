@@ -19,3 +19,4 @@ ktlint_standard_comment-wrapping = disabled
 
 [*.properties]
 charset = utf-8
+# Safe test comment for Stage 3B PR validation
