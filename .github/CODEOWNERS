@@ -1,0 +1,11 @@
+* @stysus
+
+/.github/workflows/ @stysus
+/.github/scripts/ @stysus
+/.github/dependabot.yml @stysus
+
+/settings.gradle.kts @stysus
+/common.gradle @stysus
+/gradle/ @stysus
+/gradlew @stysus
+/gradlew.bat @stysus
