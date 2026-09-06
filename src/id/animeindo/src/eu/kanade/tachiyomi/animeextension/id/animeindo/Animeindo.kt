@@ -8,7 +8,6 @@ import eu.kanade.tachiyomi.animesource.model.AnimeFilterList
 import eu.kanade.tachiyomi.animesource.model.AnimesPage
 import eu.kanade.tachiyomi.animesource.model.SAnime
 import eu.kanade.tachiyomi.animesource.model.SEpisode
-import eu.kanade.tachiyomi.animesource.model.Track
 import eu.kanade.tachiyomi.animesource.model.Video
 import eu.kanade.tachiyomi.lib.bloggerextractor.BloggerExtractor
 import eu.kanade.tachiyomi.lib.dailymotionextractor.DailymotionExtractor
@@ -84,14 +83,12 @@ class Animeindo : Source() {
                             filterUrl = if (page == 1) "$baseUrl/$path" else "$baseUrl/$path?page=$page"
                         }
                     }
-
                     is GenreFilter -> {
                         val slug = filter.selected()
                         if (slug.isNotBlank()) {
                             filterUrl = if (page == 1) "$baseUrl/genre/$slug" else "$baseUrl/genre/$slug?page=$page"
                         }
                     }
-
                     else -> {}
                 }
             }
@@ -131,7 +128,7 @@ class Animeindo : Source() {
         }
 
         val hasNextPage = doc.select("nav.pagination button:contains(Next):not([disabled]), nav.pagination a:contains(Next):not([disabled])").isNotEmpty() ||
-            doc.select("button[wire\\:click*=\"nextPage\"]:not([disabled])").isNotEmpty() ||
+            doc.getElementsByAttributeValueContaining("wire:click", "nextPage").any { !it.hasAttr("disabled") } ||
             animeList.size >= 24
 
         return AnimesPage(animeList, hasNextPage)
@@ -232,10 +229,10 @@ class Animeindo : Source() {
         val servers = extractServers(doc)
 
         for (server in servers) {
-            runCatching {
-                val serverVideos = extractVideosFromServer(server.link, server.label)
-                videos.addAll(serverVideos)
-            }
+            val serverVideos = runCatching {
+                extractVideosFromServer(server.link, server.label)
+            }.getOrElse { emptyList() }
+            videos.addAll(serverVideos)
         }
 
         return videos.distinctBy { it.videoUrl }.sortVideos()
@@ -245,11 +242,11 @@ class Animeindo : Source() {
 
     private fun extractServers(doc: Document): List<Server> {
         val servers = mutableListOf<Server>()
-        val snapshotElements = doc.select("[wire\\:snapshot]")
+        val snapshotElements = doc.getElementsByAttribute("wire:snapshot")
         for (el in snapshotElements) {
             val raw = el.attr("wire:snapshot")
-            if (!raw.contains("watch-component")) continue
-            val obj = JSONObject(raw)
+            if (!raw.contains("watch-component") && !raw.contains("\"videos\"")) continue
+            val obj = runCatching { JSONObject(raw) }.getOrNull() ?: continue
             val data = obj.optJSONObject("data") ?: continue
             val rawVideos = data.optJSONArray("videos") ?: continue
             val videoListArray = rawVideos.optJSONArray(0) ?: continue
@@ -263,11 +260,25 @@ class Animeindo : Source() {
                 }
             }
         }
+
+        // Fallback: search any iframe on page
+        if (servers.isEmpty()) {
+            doc.select("iframe[src]").forEach { iframe ->
+                val src = iframe.attr("abs:src").ifEmpty { iframe.attr("src") }.trim()
+                if (src.isNotBlank() && !src.contains("about:blank")) {
+                    servers.add(Server("Default", src))
+                }
+            }
+        }
+
         return servers
     }
 
     private suspend fun extractVideosFromServer(embedUrl: String, label: String): List<Video> {
-        val embedHeaders = headers.newBuilder().set("Referer", "$baseUrl/").build()
+        val embedHeaders = headers.newBuilder()
+            .set("User-Agent", USER_AGENT)
+            .set("Referer", "$baseUrl/")
+            .build()
         val html = client.newCall(GET(embedUrl, embedHeaders)).awaitSuccess().bodyString()
         val doc = Jsoup.parse(html, embedUrl)
 
@@ -284,16 +295,12 @@ class Animeindo : Source() {
                 }.getOrElse { emptyList() }
                 videos.addAll(hlsVideos)
             } else {
-                val videoHeaders = headers.newBuilder().set("Referer", embedUrl).build()
+                val videoHeaders = headers.newBuilder()
+                    .set("User-Agent", USER_AGENT)
+                    .set("Referer", embedUrl)
+                    .build()
                 videos.add(
-                    Video(
-                        url = src,
-                        quality = "$label - Direct",
-                        videoUrl = src,
-                        headers = videoHeaders,
-                        subtitleTracks = emptyList<Track>(),
-                        audioTracks = emptyList<Track>(),
-                    ),
+                    Video(src, "$label - Direct", src, videoHeaders, emptyList(), emptyList()),
                 )
             }
         }
@@ -310,19 +317,15 @@ class Animeindo : Source() {
                 "ok.ru" in iframeSrc -> {
                     videos.addAll(okruExtractor.videosFromUrl(iframeSrc, prefix = "$label - "))
                 }
-
                 "dailymotion.com" in iframeSrc -> {
                     videos.addAll(dailymotionExtractor.videosFromUrl(iframeSrc, prefix = "$label - "))
                 }
-
                 "dood" in iframeSrc || "ds2play" in iframeSrc -> {
                     doodExtractor.videoFromUrl(iframeSrc, prefix = "$label - ")?.let { videos.add(it) }
                 }
-
                 "blogger.com" in iframeSrc || "blogspot.com" in iframeSrc || "googleusercontent" in iframeSrc -> {
                     videos.addAll(bloggerExtractor.videosFromUrl(iframeSrc, headers, prefix = label))
                 }
-
                 else -> {
                     videos.addAll(extractGenericEmbed(iframeSrc, label))
                 }
@@ -338,7 +341,10 @@ class Animeindo : Source() {
     }
 
     private suspend fun extractGenericEmbed(embedUrl: String, label: String, preloadedHtml: String? = null): List<Video> {
-        val embedHeaders = headers.newBuilder().set("Referer", "$baseUrl/").build()
+        val embedHeaders = headers.newBuilder()
+            .set("User-Agent", USER_AGENT)
+            .set("Referer", "$baseUrl/")
+            .build()
         val html = preloadedHtml ?: runCatching {
             client.newCall(GET(embedUrl, embedHeaders)).awaitSuccess().bodyString()
         }.getOrNull() ?: return emptyList()
@@ -360,16 +366,12 @@ class Animeindo : Source() {
             val raw = match.groupValues[1]
             if (raw.isNotBlank() && !raw.contains("placeholder") && !raw.contains("loading")) {
                 val resolved = resolveUrl(raw, embedUrl)
-                val videoHeaders = headers.newBuilder().set("Referer", embedUrl).build()
+                val videoHeaders = headers.newBuilder()
+                    .set("User-Agent", USER_AGENT)
+                    .set("Referer", embedUrl)
+                    .build()
                 return listOf(
-                    Video(
-                        url = resolved,
-                        quality = label,
-                        videoUrl = resolved,
-                        headers = videoHeaders,
-                        subtitleTracks = emptyList<Track>(),
-                        audioTracks = emptyList<Track>(),
-                    ),
+                    Video(resolved, label, resolved, videoHeaders, emptyList(), emptyList()),
                 )
             }
         }
@@ -392,16 +394,12 @@ class Animeindo : Source() {
                 val raw = mp4.groupValues[1]
                 if (raw.isNotBlank() && !raw.contains("placeholder")) {
                     val resolved = resolveUrl(raw, embedUrl)
-                    val videoHeaders = headers.newBuilder().set("Referer", embedUrl).build()
+                    val videoHeaders = headers.newBuilder()
+                        .set("User-Agent", USER_AGENT)
+                        .set("Referer", embedUrl)
+                        .build()
                     return listOf(
-                        Video(
-                            url = resolved,
-                            quality = label,
-                            videoUrl = resolved,
-                            headers = videoHeaders,
-                            subtitleTracks = emptyList<Track>(),
-                            audioTracks = emptyList<Track>(),
-                        ),
+                        Video(resolved, label, resolved, videoHeaders, emptyList(), emptyList()),
                     )
                 }
             }
@@ -410,19 +408,18 @@ class Animeindo : Source() {
         return emptyList()
     }
 
-    private fun resolveUrl(raw: String, base: String): String = when {
-        raw.startsWith("http://") || raw.startsWith("https://") -> raw
-
-        raw.startsWith("//") -> "https:$raw"
-
-        raw.startsWith("/") -> {
-            runCatching {
-                val uri = URI(base)
-                "${uri.scheme}://${uri.host}$raw"
-            }.getOrElse { "$baseUrl$raw" }
+    private fun resolveUrl(raw: String, base: String): String {
+        return when {
+            raw.startsWith("http://") || raw.startsWith("https://") -> raw
+            raw.startsWith("//") -> "https:$raw"
+            raw.startsWith("/") -> {
+                runCatching {
+                    val uri = URI(base)
+                    "${uri.scheme}://${uri.host}$raw"
+                }.getOrElse { "$baseUrl$raw" }
+            }
+            else -> "${base.substringBeforeLast('/')}/$raw"
         }
-
-        else -> "${base.substringBeforeLast('/')}/$raw"
     }
 
     override fun List<Video>.sortVideos(): List<Video> {
@@ -464,11 +461,10 @@ class Animeindo : Source() {
         GenreFilter(),
     )
 
-    private class TypeFilter :
-        AnimeFilter.Select<String>(
-            "Tipe",
-            arrayOf("Semua", "Movies", "TV Shows"),
-        ) {
+    private class TypeFilter : AnimeFilter.Select<String>(
+        "Tipe",
+        arrayOf("Semua", "Movies", "TV Shows"),
+    ) {
         fun selected(): String = when (state) {
             1 -> "movies"
             2 -> "tv-shows"
@@ -476,11 +472,10 @@ class Animeindo : Source() {
         }
     }
 
-    private class GenreFilter :
-        AnimeFilter.Select<String>(
-            "Genre",
-            GENRES.map { it.first }.toTypedArray(),
-        ) {
+    private class GenreFilter : AnimeFilter.Select<String>(
+        "Genre",
+        GENRES.map { it.first }.toTypedArray(),
+    ) {
         fun selected(): String = GENRES[state].second
     }
 
