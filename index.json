@@ -7,7 +7,7 @@
     "code": 8,
     "version": "15.8",
     "nsfw": 0,
-    "sha256": "4b5145a1c0d0998315056d7d544299e159f962df2eeb45a1629abffea4f2c952",
+    "sha256": "b729968fbcb9b81bfb5de900ae780d7c7c2ae421cb4ea0015898d7204db3b2da",
     "sources": [
       {
         "name": "Anichin",
@@ -20,12 +20,12 @@
   {
     "name": "Aniyomi: Animeindo",
     "pkg": "eu.kanade.tachiyomi.animeextension.id.animeindo",
-    "apk": "aniyomi-id.animeindo-v15.2.apk",
+    "apk": "aniyomi-id.animeindo-v15.3.apk",
     "lang": "id",
-    "code": 2,
-    "version": "15.2",
+    "code": 3,
+    "version": "15.3",
     "nsfw": 0,
-    "sha256": "34aaaa2a33b77fa339715bffbfcb016f08dca2675f0b306489a826feb8a31871",
+    "sha256": "c7b613f35423d9c10fd60465ab4b2e012637279ff85401858efc27c9ad833903",
     "sources": [
       {
         "name": "Animeindo",
@@ -43,7 +43,7 @@
     "code": 3,
     "version": "15.3",
     "nsfw": 0,
-    "sha256": "73dbbfa257b1323cc9dbf831368bee40896e0ffd578d7b7854a85aa3c77bb9e6",
+    "sha256": "5c0daa2bce421035850ec70cd3f43b5705ed57092d9f9fe06bce141e61e4a82e",
     "sources": [
       {
         "name": "AnimeXin",
@@ -61,7 +61,7 @@
     "code": 3,
     "version": "15.3",
     "nsfw": 1,
-    "sha256": "cc0d4ac61b7ad92a645596cc4e372c21d6c9a21e9de78eef5d153e1975a6afc6",
+    "sha256": "894bbe83afd11f7f6de643c532d92aefd06f773b33e07f83e80a7af6ffcc6a68",
     "sources": [
       {
         "name": "Nekopoi",
@@ -79,7 +79,7 @@
     "code": 5,
     "version": "15.5",
     "nsfw": 0,
-    "sha256": "730a9a99af0efb1070da982c72a8feeb6f9818fbc96324a917d7f7e67224c86b",
+    "sha256": "ae7361738487d203c64bedf14b778b29e1e27460ad2600626f2cbb062426f111",
     "sources": [
       {
         "name": "Oploverz",
@@ -97,7 +97,7 @@
     "code": 4,
     "version": "15.4",
     "nsfw": 0,
-    "sha256": "18a0acde7f3760d25ee2320a17b7ed09fe5fbb60c8a8d4033d7cf5dbaf20b065",
+    "sha256": "6e77c091c06679d3e9bda7e808d281892293baf43034ad2c7dedf576a3a3592e",
     "sources": [
       {
         "name": "Samehadaku",
