@@ -1,0 +1,15 @@
+ext {
+    extName = 'Oploverz'
+    extClass = '.Oploverz'
+    extVersionCode = 1
+}
+
+apply from: "$rootDir/common.gradle"
+
+dependencies {
+    implementation(project(":lib:blogger-extractor"))
+    implementation(project(":lib:dood-extractor"))
+    implementation(project(":lib:okru-extractor"))
+    implementation(project(":lib:playlist-utils"))
+    implementation(project(":lib:unpacker"))
+}
